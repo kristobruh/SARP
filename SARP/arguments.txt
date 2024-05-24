@@ -1,0 +1,22 @@
+pathToClient	/users/kristofe/access/asf_client.txt
+start	2021-06-01
+end	2021-06-15
+season	none
+beamMode	IW
+flightDirection	ASCENDING
+polarization	VV,VV+VH
+processingLevel	GRD_HD
+processes	8
+applyOrbitFile	True
+thermalNoiseRemoval	True
+calibration	True
+speckleFiltering	True
+filterResolution	5
+terrainCorrection	True
+terrainResolution	10.0
+bandMaths	False
+bandMathsExpression	Sigma0_VV_db + 0.002
+linearToDb	True
+timeseries	True
+movingAverage	True
+movingAverageWindow	2

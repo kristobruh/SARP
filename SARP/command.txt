@@ -1,0 +1,5 @@
+bash run_interactive.sh -s "/scratch/project_2001106/lake_timeseries/kalvasvaara_shapefile/Kalvasvaara_Paituli_20230302-Copy1.shp" -r "/scratch/project_2001106/lake_timeseries/test/" -b -p
+
+bash run_interactive.sh -s "/scratch/project_2001106/S1_reflectors/reflectors-missing.csv" -r "/scratch/project_2001106/lake_timeseries/test/"
+
+sbatch run_batch.sh -s "/scratch/project_2001106/S1_reflectors/reflectors-missing.csv" -r "/scratch/project_2001106/S1_reflectors/test3/" -p
