@@ -47,7 +47,7 @@ It might take some time for the account to start working.
 
 ### Example 1: GND processing with timeseries
 
-Argument file:
+First you should modify the _argument.txt_ file to match with your desired download parameters and output:
 
 ```### DOWNLOAD PARAMETERS ###
 # Add the full path to your ASF credentials file. The file should be a .txt with one row, with structure : username<tab>password .
