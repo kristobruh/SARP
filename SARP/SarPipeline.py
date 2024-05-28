@@ -191,19 +191,24 @@ def do_calibration(source, polarization, pols):
     
     # Define parameters
     parameters = HashMap()
+    
+    #if polarization == 'DH':
+    #    parameters.put('sourceBands', 'Intensity_HH,Intensity_HV')
+    #elif polarization == 'DV':
+    #    parameters.put('sourceBands', 'Intensity_VH,Intensity_VV')
+    #elif polarization == 'SH' or polarization == 'HH':
+    #    parameters.put('sourceBands', 'Intensity_HH')
+    #elif polarization == 'SV':
+    #    parameters.put('sourceBands', 'Intensity_VV')
+    #else:
+    #    print("different polarization!")
+    #parameters.put('selectedPolarisations', pols)
+
+    parameters.put('outputImageInComplex', False)
     parameters.put('outputSigmaBand', True)
-    #parameters.put('outputBetaBand', True)
-    if polarization == 'DH':
-        parameters.put('sourceBands', 'Intensity_HH,Intensity_HV')
-    elif polarization == 'DV':
-        parameters.put('sourceBands', 'Intensity_VH,Intensity_VV')
-    elif polarization == 'SH' or polarization == 'HH':
-        parameters.put('sourceBands', 'Intensity_HH')
-    elif polarization == 'SV':
-        parameters.put('sourceBands', 'Intensity_VV')
-    else:
-        print("different polarization!")
-    parameters.put('selectedPolarisations', pols)
+    parameters.put('outputGammaBand', False)
+    parameters.put('outputBetaBand', False)
+    
     parameters.put('outputImageScaleInDb', False)
     output = GPF.createProduct("Calibration", parameters, source)
     return output
@@ -502,7 +507,7 @@ def TOPSAR_split(source,wkt):
     Output:
     output (productIO) - Subsetted product.
     ''' 
-    print('\Splitting SLC...')
+    print('\tSplitting SLC...')
     parameters = HashMap()
     parameters.put('wktAoi', wkt)
     output = GPF.createProduct('TOPSAR-Split', parameters, source)
@@ -520,7 +525,7 @@ def TOPSAR_deburst(source):
     Output:
     output (productIO) - Subsetted product.
     ''' 
-    print('\Debursting...')
+    print('\tDebursting SLC...')
     parameters = HashMap()
     output = GPF.createProduct('TOPSAR-Deburst', parameters, source)
     
@@ -579,9 +584,14 @@ def main():
     folder = os.path.basename(image1)
     modestamp = folder.split("_")[1]
     productstamp = folder.split("_")[2]
-    polstamp = folder.split("_")[3]
-
+    
+    if productstamp == 'GRDH':
+        polstamp = folder.split("_")[3]
+    elif productstamp == 'SLC':
+        polstamp = folder.split("_")[4]
+        print(polstamp)
     polarization = polstamp[2:4]
+    
     if polarization == 'DV':
         pols = 'VH,VV'
     elif polarization == 'DH':
@@ -592,6 +602,8 @@ def main():
         pols = 'VV'
     else:
         print("Polarization error!")
+
+        
 
         
     
@@ -643,10 +655,12 @@ def main():
         
         
     #2: CALIBRATE
-    polarization = 'DV' # This means that there is VV/VH and VV
-    pols = 'VH,VV'
     if calibration:
         product = do_calibration(product, polarization, pols)
+        
+        
+    if slcDeburst:
+        product = TOPSAR_deburst(product)
 
 
     #3: SPECKLE FILTER
