@@ -14,7 +14,7 @@ This program can download and process both Ground Range Retected (GRD) and Singl
 - Arguments (.txt): AS file specifying download and processing parameters.
 
 ### Run:
-The basic command is <type> <script> -s <source file> -r <result folder> -b (bulk download) -p (parse input file).
+The basic command is '<type> <script> -s <source file> -r <result folder> -b (bulk download) -p (parse input file)'.
 Source file path and results folder path are mandatory. Optional commands include:
 - Bulk download -b: Whether images are downloaded only once. This is useful if the shapefile targets are located close to one another, a thus likely within one approx. 200kmx200km SAR image. If not enabled, each object is downloaded separately.
 - Parse shapefile -p: Whether polygons in the shapefile are separated to individual objects. If enabled, masking and timeseries is done to the entire shapefile.
