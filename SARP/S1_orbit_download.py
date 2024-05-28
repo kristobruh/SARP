@@ -15,8 +15,9 @@ def read_arguments_from_file(file_path):
     arguments = {}
     with open(file_path, 'r') as file:
         for line in file:
-            arg_name, arg_value = line.strip().split('\t')
-            arguments[arg_name.strip()] = arg_value.strip()
+            if line.strip() and not line.strip().startswith('#'):
+                arg_name, arg_value = line.strip().split('\t')
+                arguments[arg_name.strip()] = arg_value.strip()
     return arguments
 
     
