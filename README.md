@@ -1,7 +1,7 @@
 # Sentinel-1 Automated Retrieval and Processing (SARP)
 
 ## Description
-This script is an automated Sentinel-1 SAR image download, process, and analysis pipeline. The script is meant to be run from the command line interface of Puhti, either in interactive or batch mode. Running locally works as well, but then you need to ensure that you have all the packages installed, and modify the bash script by removing module calls.
+This script is an automated Sentinel-1 SAR image download, process, and analysis pipeline for SAR images in Finland. The script is meant to be run from the command line interface of Puhti, either in interactive or batch mode. Running locally works as well, but then you need to ensure that you have all the packages installed, and modify the bash script by removing module calls.
 
 This program can download and process both Ground Range Retected (GRD) and Single-look Complex (SLC) images.
 
