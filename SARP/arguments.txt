@@ -1,22 +1,36 @@
+### DOWNLOAD PARAMETERS ###
+# Add the full path to your ASF credentials file. The file should be a .txt with one row, with structure : username<tab>password .
 pathToClient	/users/kristofe/access/asf_client.txt
+
+# Start and end dates
 start	2021-06-01
-end	2021-06-15
+end	2021-06-10
+
+# Preferred season, eg: 15,200. If not desired, set to none.
 season	none
+
+
 beamMode	IW
 flightDirection	ASCENDING
 polarization	VV,VV+VH
-processingLevel	GRD_HD
+processingLevel	SLC
 processes	8
+
+
+
+### PROCESSING PARAMETERS ###
+slcSplit	True
 applyOrbitFile	True
-thermalNoiseRemoval	True
+thermalNoiseRemoval	False
 calibration	True
+slcDeburst	True
 speckleFiltering	True
-filterResolution	5
+filterResolution	3
 terrainCorrection	True
 terrainResolution	10.0
 bandMaths	False
 bandMathsExpression	Sigma0_VV_db + 0.002
-linearToDb	True
-timeseries	True
-movingAverage	True
+linearToDb	False
+timeseries	False
+movingAverage	False
 movingAverageWindow	2

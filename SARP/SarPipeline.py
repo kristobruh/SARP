@@ -85,8 +85,9 @@ def read_arguments_from_file(file_path):
     arguments = {}
     with open(file_path, 'r') as file:
         for line in file:
-            arg_name, arg_value = line.strip().split('\t')
-            arguments[arg_name.strip()] = arg_value.strip()
+            if line.strip() and not line.strip().startswith('#'):
+                arg_name, arg_value = line.strip().split('\t')
+                arguments[arg_name.strip()] = arg_value.strip()
     return arguments
 
 def parse_arguments():
@@ -490,6 +491,44 @@ def do_band_merge(source1, source2):
 
 
 
+def TOPSAR_split(source,wkt):
+    '''
+    Select only teh desired subswaths within an SLC image.
+    
+    Input:
+    source (productIO) - SAR image with auxiliary files.
+    wkt (str) - WKT of the subset area, given in WGS84 projection.
+    
+    Output:
+    output (productIO) - Subsetted product.
+    ''' 
+    print('\Splitting SLC...')
+    parameters = HashMap()
+    parameters.put('wktAoi', wkt)
+    output = GPF.createProduct('TOPSAR-Split', parameters, source)
+    
+    return output
+
+def TOPSAR_deburst(source):
+    '''
+    Select only teh desired subswaths within an SLC image.
+    
+    Input:
+    source (productIO) - SAR image with auxiliary files.
+    wkt (str) - WKT of the subset area, given in WGS84 projection.
+    
+    Output:
+    output (productIO) - Subsetted product.
+    ''' 
+    print('\Debursting...')
+    parameters = HashMap()
+    output = GPF.createProduct('TOPSAR-Deburst', parameters, source)
+    
+    return output
+    
+
+
+
 def main():
     
     # --------START READ VARIABLES ---------
@@ -497,9 +536,12 @@ def main():
     args = read_arguments_from_file(os.path.join(os.getcwd(), 'arguments.txt'))
     polarization = args.get('polarization')
     
+    
+    slcSplit = args.get('slcSplit') == 'True'
     applyOrbitFile = args.get('applyOrbitFile') == 'True'
     thermalNoiseRemoval = args.get('thermalNoiseRemoval') == 'True'
     calibration = args.get('calibration') == 'True'
+    slcDeburst = args.get('slcDeburst') == 'True'
     speckleFiltering = args.get('speckleFiltering') == 'True'
     filterResolution = args.get('filterResolution')
     terrainCorrection = args.get('terrainCorrection') == 'True'
@@ -551,6 +593,7 @@ def main():
     else:
         print("Polarization error!")
 
+        
     
     # If there are two images, remove noise first and then assemble them
     if image2 != 'none':
@@ -584,6 +627,11 @@ def main():
     else:
         # Read file to appropriate format
         product = ProductIO.readProduct(image1)
+        
+        
+        if slcSplit:
+            wkt = shapefile_to_wkt(pathToShapefile, 'epsg:4326')
+            product = TOPSAR_split(product,wkt)
         
         # 0.5: APPLY ORBIT FILE 
         if applyOrbitFile:
