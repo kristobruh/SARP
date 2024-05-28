@@ -11,7 +11,7 @@ This program can download and process both Ground Range Retected (GRD) and Singl
 ### Input:
 - Path to a shapefile containing polygon(s), or a csv or coordinates in espg:3067. This shapefile is then parsed into individual polygons, and all available images are downloaded for the overall area for the given plot. For coordinates, a small buffer is created.
 - Result path: Full path to folder which is to be created and where results are stored.
-- Arguments (.txt): AS file specifying download and processing parameters.
+- Arguments (.txt): AS file specifying download and processing parameters. For more detailed explanation on download parameters, see: https://docs.asf.alaska.edu/api/keywords/ and https://docs.asf.alaska.edu/asf_search/ASFSearchOptions/.
 
 ### Run:
 The basic command is: 
@@ -30,18 +30,17 @@ For batch:
 
 ``` sbatch run_batch.sh /path/to/shapefile/folder/ /path/to/results/folder/ ```
 
-1. run_(interactive/batch).sh: Dictates the script structure and downloads necessary modules.
-2. initialize.py: Creates folder structure, parses shapefile
-3. download_from_asf.py: Downloads images as defined by arguments.txt from Alaska Satellite Facility (ASF). Requires an account and saving it in a .txt as:
-<USERNAME> tab <PASSWORD>
+### Process:
+0. download_packages.py: Downloads all packages that are not native to _geoconda_. For SNAP, additional downloading will be done later. If the process fails on first try, run it again after the packages have been downloaded.
+1. run_(interactive/batch).sh: Dictates the script structure and loads necessary modules.
+2. initialize.py: Creates folder structure, parses shapefile or coodinate csv file.
+3. download_from_asf.py: Downloads images as defined by arguments.txt from Alaska Satellite Facility (ASF). Requires a verified (but free) account.
 It might take some time for the account to start working.
 4. create_dem.py: Downloads dem from NLS virtual raster. If using other than NLS environment, you might need to modify the code by uncommenting this script and adding your own dem to the results folder.
 5. s1_orbit_download: Downloads and redistributes orbit files for all downloaded files, which will be used if applyOrbitFile is enabled.
-5. iterate_sar.py: Runs through each downloaded image, and if they fit the polygon, it is saved.
-6. SarPipeline.py: Does the actual processing of the images, called by iterate_sar.py
-7. timeseries.py: Some analytics of each polygon.
-
-For download parameters, see: https://docs.asf.alaska.edu/api/keywords/ and https://docs.asf.alaska.edu/asf_search/ASFSearchOptions/.
+6. iterate_sar.py: Runs through each downloaded image, and if they fit the polygon, it is saved.
+7. SarPipeline.py: Does the actual processing of the images, called by iterate_sar.py
+8. timeseries.py: Some analytics of each polygon.
 
 
 ## Examples
@@ -209,6 +208,7 @@ movingAverageWindow	2
 
 ## Authors and acknowledgment
 Kristofer Mäkinen
+
 kristofer.makinen@maanmittauslaitos.fi
 
 ## License
