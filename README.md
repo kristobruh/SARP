@@ -3,7 +3,7 @@
 ## Description
 This package is an automated Sentinel-1 SAR image download, process, and analysis pipeline for SAR images in Finland. The package is (at the moment) meant to be run from the command line interface of Puhti, either in interactive or batch mode. Running locally works as well, but then you need to ensure that you have all the packages installed, and modify the bash script by removing module calls.
 
-This program can download and process both Ground Range Retected (GRD) and Single-look Complex (SLC) images.
+This program can download and process both Ground Range Detected (GRD) and Single-look Complex (SLC) images.
 
 ## Dependencies
 This program is configured for CSC's Puhti environment. As such, it uses modules _geoconda_ and _snap_, along with a few external packages that are installed locally. The packages are:
