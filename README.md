@@ -5,7 +5,7 @@ This package is an automated Sentinel-1 SAR image download, process, and analysi
 
 This program can download and process both Ground Range Retected (GRD) and Single-look Complex (SLC) images.
 
-# Dependencies
+## Dependencies
 This program is configured for CSC's Puhti environment. As such, it uses modules _geoconda_ and _snap_, along with a few external packages that are installed locally. The packages are:
 
 -
