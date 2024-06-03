@@ -1,8 +1,4 @@
-import os, gc
-import shutil
-import subprocess
-import sys
-import argparse
+import os, gc, subprocess, sys, argparse, shutil
 
 try:
     from eof.download import download_eofs
@@ -12,6 +8,16 @@ except:
 
     
 def read_arguments_from_file(file_path):
+    '''
+    Helper function to read the arguments.txt file.
+    
+    Input:
+    - file_path (str) - Full path to the arguments file.
+    
+    Output: 
+    arguments (dict) - Dictionary of the arguments.
+    '''
+    
     arguments = {}
     with open(file_path, 'r') as file:
         for line in file:
@@ -22,7 +28,14 @@ def read_arguments_from_file(file_path):
 
     
 def download_orbit_files():    
+    '''
+    Download precise S1 ephemeris files. The process it two-pronged: first, all files are downloaded in bulk and saved to a temporary folder. Then, in order for SNAP to find them, they are moved to folders that correspond to the desired year and month.
     
+    Input:
+    
+    Output: 
+    Downloaded and sorted orbit files.
+    '''
     
     # ------- START ARGUMENT CALL --------
     path = sys.argv[1]
@@ -36,6 +49,8 @@ def download_orbit_files():
         orbit_folder = os.path.join(path, 'snap_cache/auxdata/Orbits/Sentinel-1/POEORB/S1A/')
    
     # ------- END ARGUMENT CALL -------- 
+    
+    # Create proper folder structure within the snap temporary folder
     dates = []
     sat = []
     for file in os.listdir(dataPath):

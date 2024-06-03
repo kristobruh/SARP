@@ -1,16 +1,26 @@
-import sys
+import sys, os, shutil
 import geopandas as gpd
-import os
 from shapely.geometry import Point
-import shutil
 
-def process_shapefiles(source_path, result_path, separate=True, bulkDownload=False):
+def process_shapefiles(source_path, result_path, separate=False, bulkDownload=False):
+    '''
+    Read shapefile and organize them to correct folders. Optionally parse the shapefile to individual polygons.
     
+    Input:
+    source_path (str) - Full path to the shapefile.
+    result_path (str) - Full path to the results folder.
+    separate (boolean) - Whether the shapefile is parsed to polygons. Default is false.
+    bulkDownload (boolean) - Whether the SAR images are downloaded individually or in bulk. Affects folder structure.
+    
+    Output:
+    Folder structure for the next steps.
+    ''' 
+        
     gdf = gpd.read_file(source_path)
     
     if separate:
         for index, row in gdf.iterrows():
-            # Create folder name based on the 'id' column
+            # Create folder name based on the 'id' column, might be needed to change based on shapefile attributes.
             folder_name = str(row['id'])
             folder_shapefile = os.path.join(result_path, folder_name, 'shapefile')
             os.makedirs(folder_shapefile, exist_ok=True)
@@ -34,7 +44,17 @@ def process_shapefiles(source_path, result_path, separate=True, bulkDownload=Fal
             
             
 def process_coordinates(input_csv, result_path, bulkDownload=False):
+    '''
+    Read coordinates file, create buffered shapefiles and organize them to correct folders. The coordinates are treated as individual shapefiles.
     
+    Input:
+    input_csv (str) - Full path to the coordinates csv.
+    result_path (str) - Full path to the results folder.
+    bulkDownload (boolean) - Whether the SAR images are downloaded individually or in bulk. Affects folder structure.
+    
+    Output:
+    Folder structure for the next steps.
+    ''' 
     # Read the CSV file
     gdf = gpd.read_file(input_csv, delimiter='\t', header=0)
 
@@ -59,7 +79,6 @@ def process_coordinates(input_csv, result_path, bulkDownload=False):
 
         # Save the buffered polygon as a shapefile in the folder
         polygon_gdf = gpd.GeoDataFrame(geometry=[buffered_polygon], crs='epsg:3067')
-        #polygon_gdf = polygon_gdf.to_crs('epsg:3067')
         polygon_shapefile_path = os.path.join(folder_path ,f'{folder_name}.shp')
         polygon_gdf.to_file(polygon_shapefile_path)
         
@@ -87,20 +106,14 @@ def process_coordinates(input_csv, result_path, bulkDownload=False):
             gdf.to_file(os.path.join(result_path,f'{filename}.shp'))
 
 
-        
-        
-if __name__ == "__main__":
+    
+def main():
     # Get input arguments
     source_path = sys.argv[1]
     result_path = sys.argv[2]
     separate = sys.argv[3].lower() == 'true'
     bulkDownload = sys.argv[4].lower() == 'true'
-    
-    
-    # Clear output
-    #if os.path.isdir(result_path):
-    #    shutil.rmtree(result_path)
-        
+
     # Process input
     if source_path.endswith('.csv'):
         process_coordinates(source_path, result_path, bulkDownload)
@@ -112,3 +125,8 @@ if __name__ == "__main__":
     folder_error = os.path.join(result_path, 'Error')
     os.makedirs(folder_slurm, exist_ok=True)
     os.makedirs(folder_error, exist_ok=True)
+    
+    
+    
+if __name__ == "__main__":
+    main()

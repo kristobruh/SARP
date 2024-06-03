@@ -1,17 +1,7 @@
-# NOTE: for more explanation on the code, see ASF_download.ipynb.
-
-# Example call from command line:
-
-#python download_from_asf.py --pathToResult /scratch/project_2001106/lake_timeseries/test_download/ --pathToClient /users/kristofe/access/asf_client.txt --pathToShapefile /scratch/project_2001106/lake_timeseries/lake.shp --start 2022-01-01 --end 2022-02-01 --season 20 100 --beamMode IW --flightDirection ASCENDING --polarization VV,VV+VH --processingLevel GRD_HD --processes 1
-
-
-
-# Import necessary packages
-import sys
-import site
-import os
-import subprocess
-import zipfile
+import sys, os, site, subprocess, zipfile, argparse, dask
+import geopandas as gpd
+from shapely.geometry import box, Point, Polygon
+from datetime import date 
 
 #install a foreign package, find it, and import
 try:
@@ -20,25 +10,20 @@ except:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "asf_search"])
     import asf_search as asf
 
-import geopandas as gpd
-from shapely.geometry import box, Point, Polygon
-from datetime import date 
-import argparse
-import dask
 
 
 
             
 def unzip(dataPath, file):
-    """
+    '''
     Unzip a single zip file and remove the zip file.
     
     Input:
-    - zip_file_path (str): Full path to the zip file.
+    - zip_file_path (str) - Full path to the zip file.
     
     Output: 
     Unzipped files.
-    """
+    '''
     
     # Extract the directory path without the zip extension
     extract_to = os.path.splitext(file)[0]
@@ -54,6 +39,15 @@ def unzip(dataPath, file):
     
 
 def read_arguments_from_file(file_path):
+    '''
+    Helper function to read the arguments.txt file.
+    
+    Input:
+    - file_path (str) - Full path to the arguments file.
+    
+    Output: 
+    arguments (dict) - Dictionary of the arguments.
+    '''
     arguments = {}
     with open(file_path, 'r') as file:
         for line in file:
@@ -66,6 +60,15 @@ def read_arguments_from_file(file_path):
 
 
 def authenticate(pathToClient):
+    '''
+    Authenticates your asf account.
+    
+    Input:
+    - pathToClient (str) - Full path to the file containing client info.
+    
+    Output: 
+    - session - authenticated session file.
+    '''
     # Authenticate your account
     with open(pathToClient, 'r') as file:
         line = file.readline().strip()
@@ -80,7 +83,25 @@ def authenticate(pathToClient):
     
     
 def search_and_download(start,end,season,wkt_aoi,beamMode,flightDirection,polarization,processingLevel,processes,pathToResult,session):
+    '''
+    Searches and downloads S1 files with the given parameters.
     
+    Input:
+    - start (str) - Start of the observation period (e.g. 2021-03-25)
+    - end (str) - End of the observation period (e.g. 2021-04-25)
+    - season - Specify a time period within the search window, in DOY (e.g. '100,250')
+    - wkt_aoi (str) - A wkt of the AOI.
+    - beamMode (str) - Beam mode (e.g. IW, EW, SM)
+    - flightDirection (str) - Flight direction, ASCENDING or DESCENDING (cannot be both).
+    - polarization (str) - Desired polarization (e.g. VV,VV+VH or HH)
+    - processingLevel (str) - Whether SLC or GRD (e.g. GRD_HD or SLC)
+    - processes (int) - How many files are downloaded simultaneously.
+    - pathToResult (str) - Full path to the result folder.
+    - session - Authenticated session file.
+    
+    Output: 
+    - Downloaded S1 files.
+    '''
     #search for the results
     print('Searching for results...')
     results = asf.search(
@@ -148,11 +169,7 @@ def create_wkt(pathToTarget):
 
 
 def main():
-    
-    # Extract arguments from bash
-    # First argument: source path
-    # Second: result path
-    # Third argument: bulk download
+    # Read arguments from shellscript
     pathToTarget = sys.argv[1]
     path = sys.argv[2]
     bulkDownload = sys.argv[3].lower() == 'true'
@@ -175,8 +192,10 @@ def main():
     processingLevel = args.get('processingLevel')
     processes = int(args.get('processes'))
 
+    # Authenticate the session
     session = authenticate(pathToClient)
     
+    # Create paths and wkt's
     if bulkDownload:
         pathToResult = os.path.join(path,'tiffs')
         filename = os.path.basename(pathToTarget)
@@ -189,7 +208,7 @@ def main():
         wkt_aoi = create_wkt(os.path.join(path,identifier,'shapefile',f'{identifier}.shp'))
     
     
-    
+    # Download files
     search_and_download(start,end,season,wkt_aoi,beamMode,flightDirection,
                             polarization,processingLevel,processes,pathToResult,session)
 

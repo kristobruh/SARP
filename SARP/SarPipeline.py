@@ -498,7 +498,7 @@ def do_band_merge(source1, source2):
 
 def TOPSAR_split(source,wkt):
     '''
-    Select only teh desired subswaths within an SLC image.
+    Select only the desired subswaths within an SLC image.
     
     Input:
     source (productIO) - SAR image with auxiliary files.
