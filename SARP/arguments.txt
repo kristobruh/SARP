@@ -2,13 +2,18 @@
 # Add the full path to your ASF credentials file. The file should be a .txt with one row, with structure : username<tab>password .
 pathToClient	/users/kristofe/access/asf_client.txt
 start	2021-06-01
-end	2021-06-05
+end	2021-06-15
 # Preferred season, eg: 15,200. If not desired, set to none.
 season	none
+# This is often best set at IW.
 beamMode	IW
+# Depending on what you want, both ASCENDING and DESCENDING work.
 flightDirection	ASCENDING
+# This is valid in Finland.
 polarization	VV,VV+VH
-processingLevel	SLC
+# GRD_HD for Ground Range detected, SLC for complex images.
+processingLevel	GRD_HD
+# Amount of simultaneous downloads. 8 is good.
 processes	8
 
 
@@ -19,23 +24,25 @@ processes	8
 # GRD: applyOrbitFile, thermalNoiseRemoval, calibration, speckleFiltering, terrainCorrection, linearToDb.
 # SLC: slcSplit, applyOrbitFile, calibration, slcDeburst, speckleFiltering, terrainCorrection.
 
-slcSplit	True
+slcSplit	False
 applyOrbitFile	True
 thermalNoiseRemoval	False
 calibration	True
-slcDeburst	True
+slcDeburst	False
 speckleFiltering	True
 filterResolution	3
 terrainCorrection	True
 terrainResolution	10.0
 bandMaths	False
 bandMathsExpression	Sigma0_VV_db + 0.002
-linearToDb	False
+linearToDb	True
 
 
 
 
-### POST-PROCESSING PARAMETERS
-timeseries	False
+### POST-PROCESSING PARAMETERS ###
+# Timeseries analysis is currently not supported on SLC.
+timeseries	True
 movingAverage	False
 movingAverageWindow	2
+reflector	False
