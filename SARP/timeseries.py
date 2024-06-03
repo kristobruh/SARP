@@ -1004,7 +1004,7 @@ def create_gdf(start_time, xmin, ymin, xmax, ymax):
 
 def download_weather_data(start_time, xmin, ymin, xmax, ymax):
     '''
-    Function for downloading weather data for Northern Finland from fmiopendata.
+    Function for downloading weather data from fmiopendata.
     
     Input:
     Start_time, in dt.datetime(yyyy,mm,dd) format.
@@ -1045,12 +1045,12 @@ def create_empty_grid():
     - The empty grid for the specified region.
     '''
     # Use roughly the reindeer herding area
-    poro_fp = "/scratch/project_2001106/S1_reflectors/finland_shapefile/fi_10km.shp"
-    lapland_boundaries = gpd.read_file(poro_fp)
-    lapland_boundaries = lapland_boundaries.to_crs('epsg:3067')
+    finland_fp = "/scratch/project_2001106/S1_reflectors/finland_shapefile/fi_10km.shp"
+    finland_shp = gpd.read_file(finland_fp)
+    finland_shp = finland_shp.to_crs('epsg:3067')
 
     # Extract the bounds of the MultiPolygon
-    xmin, ymin, xmax, ymax = lapland_boundaries.total_bounds
+    xmin, ymin, xmax, ymax = finland_shp.total_bounds
 
     # Specify the grid dimensions or cell size
     rows = 150
@@ -1067,10 +1067,10 @@ def create_empty_grid():
     polygons = [Polygon([(x, y), (x + (xmax - xmin) / cols, y), (x + (xmax - xmin) / cols, y + (ymax - ymin) / rows), (x, y + (ymax - ymin) / rows)]) for x, y in zip(xx.flatten(), yy.flatten())]
 
     # Create a GeoDataFrame from the list of Polygons
-    gdf_grid = gpd.GeoDataFrame(geometry=polygons, crs=lapland_boundaries.crs)
+    gdf_grid = gpd.GeoDataFrame(geometry=polygons, crs=finland_shp.crs)
 
     # Clip the grid to the original MultiPolygon
-    gdf_grid_clipped = gpd.clip(gdf_grid, lapland_boundaries)
+    gdf_grid_clipped = gpd.clip(gdf_grid, finland_shp)
 
     return gdf_grid_clipped
 
@@ -1226,7 +1226,7 @@ def find_bounds(pathToShapefile):
     
     return xmin, ymin, xmax, ymax
 
-def find_meteorological_data(data_path, target, pathToShapefile):
+def find_meteorological_data(data_path, path, target, pathToShapefile):
     
     
     #data_path = os.path.join(path,target,'tiffs')
@@ -1305,7 +1305,18 @@ def find_meteorological_data(data_path, target, pathToShapefile):
     return temperatures, snows, precipitation_amounts, precipitation_intensities, dates
 
 
-def make_plot(path,target,temperature,precipitation_amount,VV,VH,dates,meteo_dates):
+def make_plot(path,target,temperature,precipitation_amount,snows,VV,VH,dates,meteo_dates, reflector):
+    
+    if not reflector:
+        # find mean of each array
+        VV_list = []
+        VH_list = []
+        for VV_arr, VH_arr in zip(VV, VH):
+            VV_list.append(np.nanmean(VV_arr))
+            VH_list.append(np.nanmean(VH_arr))
+            
+        VV = VV_list
+        VH = VH_list
     
     # Create figure and axes
     fig, ax1 = plt.subplots(figsize=(10, 6))
@@ -1353,7 +1364,7 @@ def make_plot(path,target,temperature,precipitation_amount,VV,VH,dates,meteo_dat
 
     plt.title(f'{target} and weather conditions, {min(dates)} - {max(dates)}')
 
-    plt.savefig(f'{path}/{target}/{target}.png', dpi=150, bbox_inches='tight')
+    plt.savefig(f'{path}/{target}/{target}_weather.png', dpi=150, bbox_inches='tight')
     
     
 def make_location_fig(path,target,max_indices,filtered_indices,VV_arr,position):
@@ -1437,12 +1448,14 @@ def extract_VV_meteo(path, position, upscale_factor):
 
 
 
-if __name__ == "__main__":
+def main():
     
     args = read_arguments_from_file(os.path.join(os.getcwd(), 'arguments.txt'))
     timeseries = args.get('timeseries') == 'True'
     movingAverage = args.get('movingAverage') == 'True'
     movingAverageWindow = int(args.get('movingAverageWindow'))
+    reflector = args.get('reflector') == 'True'
+    
     
     if timeseries:
 
@@ -1488,14 +1501,19 @@ if __name__ == "__main__":
 
 
         # Do reflector timeseries
-        upscale_factor = 10
-        VV_max, VH_max, VV_arr, max_indices, filtered_indices, position = find_reflector(data_path, upscale_factor)
-        temperature, snows, precipitation_amount,precipitation_intensity, meteo_dates = find_meteorological_data(data_path,identifier, path_to_shapefile)
-        VV,VH, dates = extract_VV_meteo(data_path, position, upscale_factor)
-        make_plot(path,identifier,temperature,precipitation_amount,VV,VH,dates,meteo_dates)
-        make_location_fig(path,identifier,max_indices,filtered_indices,VV_arr,position)
+        if reflector:
+            upscale_factor = 10
+            VV_max, VH_max, VV_arr, max_indices, filtered_indices, position = find_reflector(data_path, upscale_factor)
+            make_location_fig(path,identifier,max_indices,filtered_indices,VV_arr,position)
+            VV,VH, dates = extract_VV_meteo(data_path, position, upscale_factor)
+            
+        temperature, snows, precipitation_amount,precipitation_intensity, meteo_dates = find_meteorological_data(data_path, path, identifier, path_to_shapefile)
+        make_plot(path,identifier,temperature,precipitation_amount,snows,VV,VH,dates,meteo_dates, reflector)
+
         print('Plots created, analysis done. \n')
         
     else:
         print('Timeseries not done.')
 
+if __name__ == "__main__":
+    main()
