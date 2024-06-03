@@ -91,6 +91,7 @@ linearToDb	True
 timeseries	True
 movingAverage	False
 movingAverageWindow	2
+reflector       False
 
 ```
 
@@ -155,8 +156,26 @@ Sending to process: S1A_IW_SLC__1SDV_20210602T153342_20210602T153409_038163_0481
 100% done.
 Writing...
 Processing done.
-```
 
+ID: 332782
+File parsing completed.
+Masking done.
+Statistics completed.
+Fetching meteorological data...
+07.06.2021 (6/6) processed.
+All meteorological data processed.
+Plots created, analysis done.
+
+ID: 332890
+File parsing completed.
+Masking done.
+Statistics completed.
+Fetching meteorological data...
+07.06.2021 (6/6) processed.
+All meteorological data processed.
+Plots created, analysis done.
+```
+... and so forth for all of the polygons.
 ### Example 2: SLC processing
     
 Argument file:
