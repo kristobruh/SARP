@@ -32,6 +32,11 @@ while getopts ":s:r:bp" opt; do
   esac
 done
 shift $((OPTIND -1))
+
+if [[ ${source_path} == *.csv ]]; then
+  bulk_download=false
+fi
+
 echo "Bulk download: $bulk_download, Separate polygons: $separate"
 
 # Set the path to the folder containing the scripts
@@ -43,6 +48,7 @@ python initialize.py "$source_path" "$data_path" "$separate" "$bulk_download"
 
 
 if [ "$bulk_download" = true ]; then
+    
     # Download all files over target area
     python download_from_asf.py "$source_path" "$data_path" "$bulk_download"
     
@@ -51,6 +57,9 @@ if [ "$bulk_download" = true ]; then
     
     # Download orbit files
     python S1_orbit_download.py "$data_path" "$bulk_download"
+    
+    # Download weather data
+    python download_weather.py "$source_path" "$data_path"
     
     # Process all images, subset to greatest extent
     module load snap
@@ -89,6 +98,7 @@ else
         module load snap
         source snap_add_userdir $data_path
         python3 iterate_sar.py "$source_path" "$data_path" "$bulk_download" "$id"
+        
         module load geoconda
         python timeseries.py "$source_path" "$data_path" "$bulk_download" "$id"
 

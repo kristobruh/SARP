@@ -414,9 +414,10 @@ def get_pointset_for_interpolation(gdf, value_column):
     return np.array([x, y, z]).T
 
 
-def find_meteorological_data(path, start_date, end_date):
+def find_meteorological_data(path, shapefile_path, start_date, end_date):
 
     dates = []
+    grids = []
     temperatures = []
     snows = []
     precipitation_amounts = []
@@ -424,7 +425,7 @@ def find_meteorological_data(path, start_date, end_date):
 
     
     
-    xmin, ymin, xmax, ymax = 21, 60, 31, 70
+    xmin, ymin, xmax, ymax = find_bounds(shapefile_path)
     
     start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
     end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d")
@@ -437,55 +438,93 @@ def find_meteorological_data(path, start_date, end_date):
         #create grid for variables
         grid = create_empty_grid()
         grid = interpolate_grid(gdf, grid)
-
-        #temperature = joined_gdf['predicted_temp'].values[0]
-        #snow = joined_gdf['predicted_snow'].values[0]
-        #precipitation_amount = joined_gdf['predicted_pre_amount'].values[0]
-        #precipitation_intensity = joined_gdf['predicted_pre_intensity'].values[0]
-
-        temperatures.append(grid['predicted_temp'].values[0])
-        snows.append(grid['predicted_snow'].values[0])
-        precipitation_amounts.append(grid['predicted_pre_amount'].values[0])
-        precipitation_intensities.append(grid['predicted_pre_intensity'].values[0])
-
+        grids.append(grid)
         print(f'{date.strftime("%d.%m.%Y")} ({i}/{len(dates)}) processed.', end='\r')
         i +=1
         
     print('\nAll meteorological data processed.')
     dates = [date.strftime('%Y-%m-%d') for date in dates]
     
-    data = {
-        'date': dates,
-        'temperature': temperatures,
-        'snow': snows,
-        'precipitation_amount': precipitation_amounts,
-        'precipitation_intensity': precipitation_intensities
-    }
+    if not grids or not all('geometry' in grid for grid in grids):
+        raise AttributeError('Grids do not contain geometry attribute.')
 
-    df = pd.DataFrame(data)
+    # Extract variables and geometries from grids
+    temperatures = [grid['predicted_temp'].values for grid in grids]
+    snows = [grid['predicted_snow'].values for grid in grids]
+    precipitation_amounts = [grid['predicted_pre_amount'].values for grid in grids]
+    precipitation_intensities = [grid['predicted_pre_intensity'].values for grid in grids]
+    geometries = grids[0]['geometry'].values
 
-    # Save the DataFrame to a CSV file
-    grid.to_csv(f'{path}/weatherdata.csv', index=False)
+    # Convert geometries to WKT format for storage in xarray
+    geometries_wkt = [geom.wkt for geom in geometries]
+
+    # Create xarray Dataset
+    ds = xr.Dataset(
+        {
+            "temperature": (["time", "geometry"], temperatures),
+            "snow": (["time", "geometry"], snows),
+            "precipitation_amount": (["time", "geometry"], precipitation_amounts),
+            "precipitation_intensity": (["time", "geometry"], precipitation_intensities),
+        },
+        coords={
+            "time": pd.to_datetime(dates),
+            "geometry": geometries_wkt
+        }
+    )
+
+    # Save to NetCDF
+    ds.to_netcdf(os.path.join(path,'weather.nc'))
+    
+def find_bounds(pathToShapefile):
+    gdf = gpd.read_file(pathToShapefile)
+    crs = gdf.crs
+    
+    #change to 3067 to create a 500m buffer
+    if crs != 'epsg:4326':
+        gdf = gdf.to_crs(epsg=4326)
+        crs = 'epsg:4326'
+        
+    # Calculate the outer bounds of all polygons    
+    bounds = gdf.geometry.bounds
+    
+    xmin = gdf.geometry.bounds['minx'].iloc[0] - 1
+    ymin = gdf.geometry.bounds['miny'].iloc[0] - 1
+    xmax = gdf.geometry.bounds['maxx'].iloc[0] + 1
+    ymax = gdf.geometry.bounds['maxy'].iloc[0] + 1
+    
+    return xmin, ymin, xmax, ymax
 
 
 def main():
-    
+    print('Downloading weather data...')
     args = read_arguments_from_file(os.path.join(os.getcwd(), 'arguments.txt'))
     timeseries = args.get('timeseries') == 'True'
     movingAverage = args.get('movingAverage') == 'True'
     movingAverageWindow = int(args.get('movingAverageWindow'))
-    reflector = args.get('reflector') == 'True'
     start = args.get('start')
     end = args.get('end')
     
     if timeseries:
-        path = sys.argv[1]
-        
-        find_meteorological_data(path, start, end)
+        source_path = sys.argv[1]
+        path = sys.argv[2]
+        find_meteorological_data(path, source_path, start, end)
         print('Weather data downloaded.')
         
     else:
         print('Timeseries not done.')
+            
+    
+        ds = xr.Dataset(
+        {'temperature': (('date', 'geometry'), grid['predicted_temp'].values)},
+        {'snow': (('date', 'geometry'), grid['predicted_snow'].values)},
+        {'precipitation_amount': (('date', 'geometry'), grid[grid['predicted_pre_amount']].values)},
+        {'precipitation_intensity': (('date', 'geometry'), grid[grid['predicted_pre_intensity']].values)},
+        coords={
+            'date': dates,
+            'geometry': grid['geometry']
+                }
+            )
+
 
 if __name__ == "__main__":
     main()
