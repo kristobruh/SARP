@@ -45,4 +45,5 @@ linearToDb	True
 timeseries	True
 movingAverage	False
 movingAverageWindow	2
+# If reflector is enabled, the code finds a brightest spot in the image and calculates timeseries on that one spot.
 reflector	False
