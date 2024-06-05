@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from rasterio.mask import mask
 import geopandas as gpd
 from shapely.geometry import Polygon, MultiPolygon, Point
+from shapely import wkt
 import pandas as pd
 import gc
 import rioxarray
@@ -1446,6 +1447,43 @@ def extract_VV_meteo(path, position, upscale_factor):
     
     return VVs, VHs, dates
 
+def extract_intersected_data(netcdf_path, target_shapefile_path):
+    # Open the NetCDF file as an xarray.Dataset
+    ds = xr.open_dataset(netcdf_path)
+
+    # Load the target shapefile as a GeoDataFrame
+    target_gdf = gpd.read_file(target_shapefile_path)
+
+    # Convert the WKT geometries back to shapely geometries
+    geometries = ds['geometry'].values
+    geometries_shapely = [wkt.loads(geom) for geom in geometries]
+
+    # Create a GeoDataFrame from the geometries
+    gdf = gpd.GeoDataFrame({'geometry': geometries_shapely})
+    gdf = gdf.set_crs('epsg:3067')
+    target_gdf = target_gdf.set_crs('epsg:3067')
+
+    gdf = gdf.to_crs('epsg:3067')
+    target_gdf = target_gdf.to_crs('epsg:3067')
+
+    # Perform the spatial join to find intersections with the target shapefile
+    intersected_gdf = gpd.sjoin(gdf, target_gdf, how="inner", predicate='intersects')
+
+    # Get the indices of the intersected geometries
+    intersected_indices = intersected_gdf.index
+
+    # Extract the intersected data from the xarray.Dataset
+    intersected_data = ds.isel(geometry=intersected_indices)
+
+    # Extract the specific variables and dates
+    temperature = intersected_data['temperature']
+    snows = intersected_data['snow']
+    precipitation_amount = intersected_data['precipitation_amount']
+    precipitation_intensity = intersected_data['precipitation_intensity']
+    meteo_dates = intersected_data['time']
+    dates = [pd.to_datetime(date).strftime('%Y-%m-%d') for date in meteo_dates.values]
+
+    return temperature, snows, precipitation_amount, precipitation_intensity, dates
 
 
 def main():
@@ -1506,10 +1544,13 @@ def main():
             VV_max, VH_max, VV_arr, max_indices, filtered_indices, position = find_reflector(data_path, upscale_factor)
             make_location_fig(path,identifier,max_indices,filtered_indices,VV_arr,position)
             VV,VH, dates = extract_VV_meteo(data_path, position, upscale_factor)
-            
-        temperature, snows, precipitation_amount,precipitation_intensity, meteo_dates = find_meteorological_data(data_path, path, identifier, path_to_shapefile)
+        
+        # Use either ready weather data, or download them again
+        if bulkDownload:
+            temperature, snows, precipitation_amount, precipitation_intensity, meteo_dates = extract_intersected_data(os.path.join(path,'weather.nc'), path_to_shapefile)
+        else:
+            temperature, snows, precipitation_amount,precipitation_intensity, meteo_dates = find_meteorological_data(data_path, path, identifier, path_to_shapefile)
         make_plot(path,identifier,temperature,precipitation_amount,snows,VV,VH,dates,meteo_dates, reflector)
-
         print('Plots created, analysis done. \n')
         
     else:
