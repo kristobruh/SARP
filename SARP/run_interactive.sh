@@ -50,13 +50,13 @@ python initialize.py "$source_path" "$data_path" "$separate" "$bulk_download"
 if [ "$bulk_download" = true ]; then
     
     # Download all files over target area
-    python download_from_asf.py "$source_path" "$data_path" "$bulk_download"
+    python download_sar.py "$source_path" "$data_path" "$bulk_download"
     
     # Create DEM over the large area
-    python create_dem.py "$source_path" "$data_path" "$bulk_download"
+    python download_dem.py "$source_path" "$data_path" "$bulk_download"
     
     # Download orbit files
-    python S1_orbit_download.py "$data_path" "$bulk_download"
+    python download_orbits.py "$data_path" "$bulk_download"
     
     # Download weather data
     python download_weather.py "$source_path" "$data_path"
