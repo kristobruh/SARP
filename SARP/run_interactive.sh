@@ -50,7 +50,7 @@ python initialize.py "$source_path" "$data_path" "$separate" "$bulk_download"
 if [ "$bulk_download" = true ]; then
     
     # Download all files over target area
-    python download_sar.py "$source_path" "$data_path" "$bulk_download"
+    python download_images.py "$source_path" "$data_path" "$bulk_download"
     
     # Create DEM over the large area
     python download_dem.py "$source_path" "$data_path" "$bulk_download"
