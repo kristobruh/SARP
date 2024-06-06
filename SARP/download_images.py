@@ -1,4 +1,4 @@
-import sys, os, subprocess, zipfile, dask
+import sys, os, subprocess, zipfile, dask, csv
 import geopandas as gpd
 from shapely.geometry import box, Point, Polygon
 
@@ -36,7 +36,7 @@ def unzip(dataPath, file):
 
 def read_arguments_from_file(file_path):
     '''
-    Helper function to read the arguments.txt file.
+    Helper function to read the arguments.csv file.
     
     Input:
     - file_path (str) - Full path to the arguments file.
@@ -46,9 +46,10 @@ def read_arguments_from_file(file_path):
     '''
     arguments = {}
     with open(file_path, 'r') as file:
-        for line in file:
-            if line.strip() and not line.strip().startswith('#'):
-                arg_name, arg_value = line.strip().split('\t')
+        reader = csv.reader(file, delimiter='\t')
+        for row in reader:
+            if row and not row[0].startswith('#'):
+                arg_name, arg_value = row
                 arguments[arg_name.strip()] = arg_value.strip()
     return arguments
 
@@ -173,7 +174,7 @@ def main():
         identifier = sys.argv[4]
 
     # Read arguments from the text file
-    args = read_arguments_from_file(os.path.join(os.getcwd(), 'arguments.txt'))
+    args = read_arguments_from_file(os.path.join(os.path.dirname(os.getcwd()), 'arguments.csv'))
     pathToClient = args.get('pathToClient')
     start = args.get('start')
     end = args.get('end')
