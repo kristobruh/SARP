@@ -1,4 +1,4 @@
-import os, subprocess, sys
+import os, subprocess, sys, csv
 import numpy as np
 import geopandas as gpd
 from shapely.geometry import Polygon, Point
@@ -22,22 +22,23 @@ except:
     
 
 def read_arguments_from_file(file_path):
-    """
-    Extract arguments from the given text file.
+    '''
+    Helper function to read the arguments.csv file.
     
     Input:
-    - filePath (str): Full file path to the the text file.
+    - file_path (str) - Full path to the arguments file.
     
     Output: 
-    arguments (dict): Dictionary containing all the arguments within the text file.
-    """
+    arguments (dict) - Dictionary of the arguments.
+    '''
     arguments = {}
     with open(file_path, 'r') as file:
-        for line in file:
-            if line.strip() and not line.strip().startswith('#'):
-                arg_name, arg_value = line.strip().split('\t')
+        reader = csv.reader(file, delimiter='\t')
+        for row in reader:
+            if row and not row[0].startswith('#'):
+                arg_name, arg_value = row
                 arguments[arg_name.strip()] = arg_value.strip()
-    return arguments    
+    return arguments 
 
 
 
@@ -475,7 +476,7 @@ def find_bounds(pathToShapefile):
 
 def main():
     print('Downloading weather data...')
-    args = read_arguments_from_file(os.path.join(os.getcwd(), 'arguments.txt'))
+    args = read_arguments_from_file(os.path.join(os.path.dirname(os.getcwd()), 'arguments.csv'))
     timeseries = args.get('timeseries') == 'True'
     movingAverage = args.get('movingAverage') == 'True'
     movingAverageWindow = int(args.get('movingAverageWindow'))

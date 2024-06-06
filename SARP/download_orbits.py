@@ -1,4 +1,4 @@
-import os, subprocess, sys, shutil
+import os, subprocess, sys, shutil, csv
 
 try:
     from eof.download import download_eofs
@@ -9,7 +9,7 @@ except:
     
 def read_arguments_from_file(file_path):
     '''
-    Helper function to read the arguments.txt file.
+    Helper function to read the arguments.csv file.
     
     Input:
     - file_path (str) - Full path to the arguments file.
@@ -17,12 +17,12 @@ def read_arguments_from_file(file_path):
     Output: 
     arguments (dict) - Dictionary of the arguments.
     '''
-    
     arguments = {}
     with open(file_path, 'r') as file:
-        for line in file:
-            if line.strip() and not line.strip().startswith('#'):
-                arg_name, arg_value = line.strip().split('\t')
+        reader = csv.reader(file, delimiter='\t')
+        for row in reader:
+            if row and not row[0].startswith('#'):
+                arg_name, arg_value = row
                 arguments[arg_name.strip()] = arg_value.strip()
     return arguments
 
@@ -104,7 +104,7 @@ def download_orbit_files():
     
 def main():
     
-    args = read_arguments_from_file(os.path.join(os.getcwd(), 'arguments.txt'))
+    args = read_arguments_from_file(os.path.join(os.path.dirname(os.getcwd()), 'arguments.csv'))
     applyOrbitFile = args.get('applyOrbitFile') == 'True'
     
     if applyOrbitFile:

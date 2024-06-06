@@ -22,30 +22,26 @@ NOTE: For now it has some hard-coded things specific to Finland, so refrain from
 
 '''
 
-import os,sys, subprocess, shutil
+import os,sys, subprocess, shutil, csv
 
-def read_arguments_from_file(filePath):
-    """
-    Extract arguments from the given text file.
+def read_arguments_from_file(file_path):
+    '''
+    Helper function to read the arguments.csv file.
     
     Input:
-    - filePath (str): Full file path to the the text file.
+    - file_path (str) - Full path to the arguments file.
     
     Output: 
-    arguments (dict): Dictionary containing all the arguments within the text file.
-    """
-    
-    # Intialize dictionary
+    arguments (dict) - Dictionary of the arguments.
+    '''
     arguments = {}
-    # Open the file and iterate through each line
-    with open(filePath, 'r') as file:
-        for line in file:
-            # Separated by a tab, assign argument name and value
-            if line.strip() and not line.strip().startswith('#'):
-                arg_name, arg_value = line.strip().split('\t')
+    with open(file_path, 'r') as file:
+        reader = csv.reader(file, delimiter='\t')
+        for row in reader:
+            if row and not row[0].startswith('#'):
+                arg_name, arg_value = row
                 arguments[arg_name.strip()] = arg_value.strip()
     return arguments
-
 
 
 def process_sar_data(image1,image2, dataPath, pathToDem, pathToShapefile):
