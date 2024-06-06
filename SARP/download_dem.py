@@ -1,10 +1,8 @@
 import os, sys
+import geopandas as gpd
 import rasterio
 from rasterio.windows import from_bounds
 from rasterio.transform import from_origin
-import geopandas as gpd
-from shapely.geometry import box, Polygon
-import fiona
 
 def main():
     # Extract arguments from shellscript

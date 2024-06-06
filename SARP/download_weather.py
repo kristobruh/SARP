@@ -1,22 +1,9 @@
-import os
-import rasterio
-import subprocess
-import shutil
+import os, subprocess, sys
 import numpy as np
-from scipy.stats import norm, skew, kurtosis
-from scipy.misc import derivative
-from scipy.optimize import fsolve
-import matplotlib.pyplot as plt
-#from datetime import datetime
-from rasterio.mask import mask
 import geopandas as gpd
-from shapely.geometry import Polygon, MultiPolygon, Point
+from shapely.geometry import Polygon, Point
 import pandas as pd
-import gc
-import rioxarray
 import xarray as xr
-import csv
-import sys
 import datetime
 
 try:
@@ -31,16 +18,7 @@ try:
     from pyinterpolate.idw import inverse_distance_weighting
 except:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "pyinterpolate"])
-    from pyinterpolate.idw import inverse_distance_weighting
-
-
-from matplotlib.colors import Normalize
-from matplotlib.cm import ScalarMappable
-
-from rasterio.enums import Resampling
-import matplotlib.pyplot as plt
-from scipy.stats import zscore
-    
+    from pyinterpolate.idw import inverse_distance_weighting    
     
 
 def read_arguments_from_file(file_path):

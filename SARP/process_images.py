@@ -18,24 +18,11 @@ In order to run this properly, ensure you have the following:
 
 Then you are good to run this through the command line interface!
 
-NOTE: For not it has some hard-coded things specific to Finland, so refrain from using it in any other CRS' that epsg:3067.
+NOTE: For now it has some hard-coded things specific to Finland, so refrain from using it in any other CRS' than epsg:3067.
 
 '''
 
-import os
-import sys
-import subprocess
-import zipfile
-import shutil
-import numpy as np
-
-try:
-    import rasterio
-except:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "rasterio"])
-    import rasterio
-
-
+import os,sys, subprocess, shutil
 
 def read_arguments_from_file(filePath):
     """
@@ -72,46 +59,13 @@ def process_sar_data(image1,image2, dataPath, pathToDem, pathToShapefile):
     
     # Construct the command to run SarPipeline.py with the specified arguments
     command = [
-        'python3', 'SarPipeline.py',
+        'python3', 'snap_process.py',
         image1, image2, dataPath, pathToDem, pathToShapefile
     ]
     
     # Run the command using subprocess
     subprocess.run(command)
-    
-def filter_images(dataPath):
-    
-    tiff_files = [file for file in os.listdir(dataPath) if file.endswith('.tif')]
-    
-    # Loop over each GeoTIFF file
-    for tiff_file in tiff_files:
-        with rasterio.open(os.path.join(dataPath, tiff_file)) as src:
-            vh_band = src.read(1)
-            vv_band = src.read(2)
-           
-            vv_mean = np.nanmean(vv_band)
-            vh_mean = np.nanmean(vh_band)
-            std = np.nanstd(vv_band)
-            
-            # Count NaN values
-            nan_count = np.sum(np.isnan(vv_band))
-            total_pixels = vv_band.size
-            nan_percentage = nan_count / total_pixels
 
-            # Count 0-values
-            zero_count = np.sum(vv_band == 0.000)
-            zero_percentage = zero_count / total_pixels
-
-            # Count low values
-            low_count = np.sum(vv_band < -49)
-            low_percentage = low_count / total_pixels
-            
-            # If any oddities are found, delete
-            if vv_mean == 0 or vh_mean == 0 or std > 15 or nan_percentage > 0.1 or zero_percentage > 0.1 or low_percentage > 0.05:
-                os.remove(os.path.join(dataPath, tiff_file))
-                print(f'{tiff_file} deleted.')
-    
-    
 
 def main():
     # Main function to call all sub-functions and subscripts.
@@ -186,12 +140,6 @@ def main():
             shutil.rmtree(os.path.join(dataPath, filename1))
 
     # ------- END PROCESSING -------
-    
-    # ------- START FILTERING BAD IMAGES -------
-    
-    #filter_images(dataPath)   
-    
-    # ------- END FILTERING BAD IMAGS -------
 
 if __name__ == "__main__":
     main()

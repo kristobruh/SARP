@@ -1,4 +1,4 @@
-import os, gc, subprocess, sys, argparse, shutil
+import os, subprocess, sys, shutil
 
 try:
     from eof.download import download_eofs

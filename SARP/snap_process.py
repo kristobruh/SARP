@@ -23,51 +23,32 @@ There are some functions which are not used in this particular process, but I ke
 
 '''
 
-import os, gc
+import os, gc, subprocess, sys, argparse
 from snappy import HashMap, GPF, ProductIO
 from snapista import Operator
 import jpy
-import shutil
-import subprocess
-import sys
-import argparse
 
-# These are not a part of SNAP, thus they will be installed locally to the user and then imported
-# Needed for reading shapefiles properly
 try:
     import geopandas as gpd
 except:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "geopandas"])
     import geopandas as gpd
 
-# Needed for shapefile transformations and boundary definitions
 try:
-    from shapely.geometry import box, Polygon
+    from shapely.geometry import Polygon
     from shapely.ops import transform
     from shapely.wkt import loads
 except:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "shapely"])
-    from shapely.geometry import box, Polygon
+    from shapely.geometry import Polygon
     from shapely.ops import transform
     from shapely.wkt import loads
-
-try:
-    from rasterio.windows import from_bounds
-except:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "rasterio"])
-    from rasterio.windows import from_bounds
 
 try:
     import pyproj
 except:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "pyproj"])
     import pyproj
-
-try:
-    import psutil
-except:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "psutil"])
-    import psutil
 
     
     

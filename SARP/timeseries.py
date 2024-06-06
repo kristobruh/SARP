@@ -1,23 +1,14 @@
-import os
-import rasterio
-import subprocess
-import shutil
+import os, subprocess, shutil, gc, sys, csv
 import numpy as np
-from scipy.stats import norm, skew, kurtosis
-from scipy.misc import derivative
-from scipy.optimize import fsolve
-import matplotlib.pyplot as plt
-#from datetime import datetime
-from rasterio.mask import mask
 import geopandas as gpd
-from shapely.geometry import Polygon, MultiPolygon, Point
-from shapely import wkt
 import pandas as pd
-import gc
-import rioxarray
+import rasterio
+from rasterio.mask import mask
+from scipy.stats import norm
+import matplotlib.pyplot as plt
+from shapely.geometry import Polygon, Point
+from shapely import wkt
 import xarray as xr
-import csv
-import sys
 import datetime
 
 try:
@@ -1339,16 +1330,14 @@ def make_plot(path,target,temperature,precipitation_amount,snows,VV,VH,dates,met
 
     # Create a third y-axis for the right side
     ax3 = ax1.twinx()
-    ax3.spines['right'].set_position(('outward', 60))  # Adjust the position of the axis
-
-    # Plot temperature on the right axis
+    ax3.spines['right'].set_position(('outward', 60))
     line4, = ax3.plot(meteo_dates, temperature, label='Temperature', color='orange')
     ax3.set_ylabel('Temperature', color='black')
     ax3.set_ylim(-30,30)
     ax3.axhline(0,linestyle='--',color='black',linewidth=0.5)
 
     ax4 = ax1.twinx()
-    ax4.spines['right'].set_position(('outward', 120))  # Adjust the position of the axis
+    ax4.spines['right'].set_position(('outward', 120))
     line5, = ax4.plot(meteo_dates, snows, label='Snow depth', color='black')
     ax4.set_ylabel('Snow (cm)', color='black')
     ax4.set_ylim(0,100)

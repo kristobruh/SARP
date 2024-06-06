@@ -1,16 +1,12 @@
-import sys, os, site, subprocess, zipfile, argparse, dask
+import sys, os, subprocess, zipfile, dask
 import geopandas as gpd
 from shapely.geometry import box, Point, Polygon
-from datetime import date 
 
-#install a foreign package, find it, and import
 try:
     import asf_search as asf
 except:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "asf_search"])
     import asf_search as asf
-
-
 
 
             
