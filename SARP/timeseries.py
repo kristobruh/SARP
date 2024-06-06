@@ -4,18 +4,27 @@ import geopandas as gpd
 import pandas as pd
 import rasterio
 from rasterio.mask import mask
+from rasterio.enums import Resampling
 from scipy.stats import norm
 import matplotlib.pyplot as plt
 from shapely.geometry import Polygon, Point
 from shapely import wkt
 import xarray as xr
 import datetime
+from scipy.stats import zscore
 
 try:
     from fmiopendata.wfs import download_stored_query
 except:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "fmiopendata"])
     from fmiopendata.wfs import download_stored_query
+    
+    
+try:
+    from pyinterpolate.idw import inverse_distance_weighting
+except:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "pyinterpolate"])
+    from pyinterpolate.idw import inverse_distance_weighting
 
 
 def read_arguments_from_file(file_path):
@@ -584,26 +593,6 @@ def calculate_statistics(VV, VH, dates, output_path):
         writer.writerow(['Date', 'VV Mean', 'VV Min', 'VV Max', 'VV Std', 'VH Mean', 'VH Min', 'VH Max', 'VH Std'])
         for date, vv_mean, vv_min, vv_max, vv_std, vh_mean, vh_min, vh_max, vh_std in zip(dates, VV_mean, VV_min, VV_max, VV_std, VH_mean, VH_min, VH_max, VH_std):
             writer.writerow([date, vv_mean, vv_min, vv_max, vv_std, vh_mean, vh_min, vh_max, vh_std])
-            
-            
-from sklearn.preprocessing import MinMaxScaler
-
-try:
-    from pyinterpolate.idw import inverse_distance_weighting
-except:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "pyinterpolate"])
-    from pyinterpolate.idw import inverse_distance_weighting
-
-
-from matplotlib.colors import Normalize
-from matplotlib.cm import ScalarMappable
-
-import rasterio
-from rasterio.enums import Resampling
-import os
-import datetime
-import matplotlib.pyplot as plt
-from scipy.stats import zscore
 
 
 def find_reflector(path, upscale_factor):
