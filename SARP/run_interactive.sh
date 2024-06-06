@@ -64,7 +64,7 @@ if [ "$bulk_download" = true ]; then
     # Process all images, subset to greatest extent
     module load snap
     source snap_add_userdir $data_path
-    python3 iterate_sar.py "$source_path" "$data_path" "$bulk_download"
+    python3 process_images.py "$source_path" "$data_path" "$bulk_download"
     
     module load geoconda
     for folder_path in "$data_path"/*/; do
