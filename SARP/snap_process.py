@@ -498,18 +498,36 @@ def TOPSAR_split(source,wkt):
 
 def TOPSAR_deburst(source):
     '''
-    Select only teh desired subswaths within an SLC image.
+    Deburst image for clearer picture.
     
     Input:
     source (productIO) - SAR image with auxiliary files.
-    wkt (str) - WKT of the subset area, given in WGS84 projection.
     
     Output:
-    output (productIO) - Subsetted product.
+    output (productIO) - Debursted product.
     ''' 
     print('\tDebursting SLC...')
     parameters = HashMap()
     output = GPF.createProduct('TOPSAR-Deburst', parameters, source)
+    
+    return output
+
+def polarimetric_speckle_filtering(source,filterResolution):
+    '''
+    Apply polarimetric speckle filter.
+    
+    Input:
+    source (productIO) - SAR image with auxiliary files.
+    
+    Output:
+    output (productIO) - Subsetted product.
+    ''' 
+    print('\tPolarimetric spekle filtering...')
+    parameters = HashMap()
+    parameters.put('filter','Box Car Filter')
+    resolution = f'{filterResolution}x{filterResolution}'
+    parameters.put('windowSize',resolution)
+    output = GPF.createProduct('Polarimetric-Speckle-Filter', parameters, source)
     
     return output
     
@@ -530,6 +548,7 @@ def main():
     calibration = args.get('calibration') == 'True'
     slcDeburst = args.get('slcDeburst') == 'True'
     speckleFiltering = args.get('speckleFiltering') == 'True'
+    polarimetricSpeckleFiltering = args.get('polarimetricSpeckleFiltering') == 'True'
     filterResolution = args.get('filterResolution')
     terrainCorrection = args.get('terrainCorrection') == 'True'
     terrainResolution = args.get('terrainResolution')
@@ -571,7 +590,6 @@ def main():
         polstamp = folder.split("_")[3]
     elif productstamp == 'SLC':
         polstamp = folder.split("_")[4]
-        print(polstamp)
     polarization = polstamp[2:4]
     
     if polarization == 'DV':
@@ -625,7 +643,11 @@ def main():
         
         if slcSplit:
             wkt = shapefile_to_wkt(pathToShapefile, 'epsg:4326')
-            product = TOPSAR_split(product,wkt)
+            try:
+                product = TOPSAR_split(product,wkt)
+            except RuntimeError:
+                print('Target does not overlap with any bursts.')
+                sys.exit()
         
         # 0.5: APPLY ORBIT FILE 
         if applyOrbitFile:
@@ -648,15 +670,22 @@ def main():
     #3: SPECKLE FILTER
     if speckleFiltering:
         filterType = 'Lee'
-        do_speckle_filtering(product, filterType, filterResolution)
+        product = do_speckle_filtering(product, filterType, filterResolution)
+        
+    if polarimetricSpeckleFiltering:
+        product = polarimetric_speckle_filtering(product,filterResolution)
 
 
     #4: TERRAIN CORRECTION
     #define epsg:3067. This is atm hard-coded.
     proj = '''PROJCS["ETRS89 / TM35FIN(E,N)", GEOGCS["ETRS89", DATUM["European Terrestrial Reference System 1989", SPHEROID["GRS 1980", 6378137.0, 298.257222101, AUTHORITY["EPSG","7019"]], TOWGS84[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], AUTHORITY["EPSG","6258"]], PRIMEM["Greenwich", 0.0, AUTHORITY["EPSG","8901"]], UNIT["degree", 0.017453292519943295], AXIS["Geodetic longitude", EAST], AXIS["Geodetic latitude", NORTH], AUTHORITY["EPSG","4258"]], PROJECTION["Transverse_Mercator", AUTHORITY["EPSG","9807"]], PARAMETER["central_meridian", 27.0], PARAMETER["latitude_of_origin", 0.0], PARAMETER["scale_factor", 0.9996], PARAMETER["false_easting", 500000.0], PARAMETER["false_northing", 0.0], UNIT["m", 1.0], AXIS["Easting", EAST], AXIS["Northing", NORTH], AUTHORITY["EPSG","3067"]]'''
     if terrainCorrection:
-        product = do_terrain_correction(product, proj, pathToDem, terrainResolution)
-
+        try:
+            product = do_terrain_correction(product, proj, pathToDem, terrainResolution)
+        except RuntimeError:
+            print('Target does not overlap with the image.')
+            sys.exit()
+          
     #5 COVERT TO DB
     if linearToDb:
         product = do_linear_to_db(product)
@@ -669,14 +698,30 @@ def main():
     if bandMaths:
         maths = do_band_maths(product, bandMathExpression)
         product = do_band_merge(product, maths)
+        
+        
+    # Get relevant metadata
+    product_type = product.getMetadataRoot().getElement('Abstracted_Metadata').getAttribute('PRODUCT_TYPE').getData()
+    direction = product.getMetadataRoot().getElement('Abstracted_Metadata').getAttribute('PASS').getData()
+    rel_orbit = product.getMetadataRoot().getElement('Abstracted_Metadata').getAttribute('REL_ORBIT').getData()
+    look = product.getMetadataRoot().getElement('Abstracted_Metadata').getAttribute('antenna_pointing').getData()
     
+    print(f'Product type: {product_type}, Orbit: {direction}, Relative orbit: {rel_orbit}, Look: {look}')
+    
+    
+    #metadata_root = product.getMetadataRoot()
+    #for element in metadata_root.getElements():
+    #    for attribute in element.getAttributes():
+    #        attribute_name = attribute.getName()
+    #        attribute_value = attribute.getData()
+    #        print(f"Attribute Name: {attribute_name}, Value: {attribute_value}")
 
     #9: WRITE
     print('Writing...')
     # Cut name to only until date of acquisition
     filename = os.path.basename(image1)
     time_str = filename.split('_')[4][:8]
-    output_filename = f'{time_str}_processed.tif'
+    output_filename = f'{time_str}_{product_type}_{direction}_{rel_orbit}_{look}_processed.tif'
     ProductIO.writeProduct(product, os.path.join(dataPath, output_filename), 'GeoTIFF')
     #ProductIO.writeProduct(product, dataPath + f'/{folder[:-47]}_processed', 'GeoTIFF')
     print('Processing done. \n')
