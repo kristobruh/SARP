@@ -1,4 +1,5 @@
-import sys, os
+import sys, os, signal, csv
+from datetime import datetime
 import geopandas as gpd
 from shapely.geometry import Point
 
@@ -105,9 +106,165 @@ def process_coordinates(input_csv, result_path, bulkDownload=False):
         else:
             gdf.to_file(os.path.join(result_path,f'{filename}.shp'))
 
+   
+def read_arguments_from_file(file_path):
+    '''
+    Helper function to read the arguments.csv file.
+    
+    Input:
+    - file_path (str) - Full path to the arguments file.
+    
+    Output: 
+    arguments (dict) - Dictionary of the arguments.
+    '''
+    arguments = {}
+    try:
+        with open(file_path, 'r') as file:
+            reader = csv.reader(file, delimiter='\t')
+            for row in reader:
+                if row and not row[0].startswith('#'):
+                    arg_name, arg_value = row
+                    arguments[arg_name.strip()] = arg_value.strip()
+        return arguments        
+
+    except:
+        print('Error in reading arguments from file. Ensure that they are separated by a tab and you have the file in a correct path.')
+            
+def check_processing_parameters():
+    error = None
+    args = read_arguments_from_file(os.path.join(os.path.dirname(os.getcwd()), 'arguments.csv'))
+    
+    
+    
+    # Check is client path exists
+    pathToClient = args.get('pathToClient')
+    if not os.path.isfile(pathToClient):
+        print('Client file path is not valid.')
+        error = True
+    else:
+        try:
+            with open(pathToClient, 'r') as file:
+                lines = file.readlines()
+
+                if len(lines) != 1:
+                    print('There are more than one line in your client file. Ensure it is only one line, username and password separated by a tab.')
+                    error = True
+
+                try:
+                    entries = lines[0].strip().split('\t')
+                    if len(entries) != 2:
+                        print('There are more than two entries in the file.')
+                        error = True
+                except ValueError:
+                    print('Entries not separated by a tab.')
+                    error = True
+        except:
+            print('Error reading client file.')
+            error = True
+        
+        
+        
+        
+    # Check there are no errors dates.
+    start = args.get('start')
+    end = args.get('end')
+    try:
+        start_date = datetime.strptime(start, '%Y-%m-%d')
+    except ValueError:
+        print(f"Error: Start date '{start}' is not a valid date.")
+        error = True
+
+    try:
+        end_date = datetime.strptime(end, '%Y-%m-%d')
+    except ValueError:
+        print(f"Error: End date '{end}' is not a valid date.")
+        error = True
+
+    if 'start_date' in locals() and 'start_date' in locals():
+        if start_date >= end_date:
+            print(f"Error: Start date '{start}' is not before end date '{end}'.")
+            error = True
+        
+        
+        
+        
+        
+        
+    # Check if season is correct
+    
+    season = args.get('season')
+    
+    if season != 'none':
+        try:
+            start,end = season.strip().split(',')
+            print(start,end)
+            if start > 364 or end > 365 or start > end:
+                print('Season values incorrect. Check that they are in DOY, less than 365, and that start is smaller than end.')
+                error = True
+        except ValueError:
+            print('Ensure that seasons are separated by a comma.')
+            error = True
+    
+    
+    # Check that beam mode is correct.
+    beamMode = args.get('beamMode')
+    modes = ['EW', 'IW', 'S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'WV']
+    if beamMode not in modes:
+        print('Unacceptable beam mode.')
+        error = True
+            
+    # Check that flight direction is correct
+    flightDirection = args.get('flightDirection')
+    directions = ['ASCENDING','DESCENDING','ASC','DESC','A','D']
+    
+    if flightDirection not in directions:
+        print('Faulty flight direction.')
+        error = True
+        
+        
+    # Check that polarization is correct
+    target_pols = ['VV', 'VV+VH', 'Dual VV', 'VV+VH', 'Dual HV', 'Dual HH', 'HH', 'HH+HV', 'VV', 'Dual VH']
+    try:
+        pols = args.get('polarization').strip().split(',')
+        for pol in pols:
+            if pol not in target_pols:
+                print(f'Error: Pol {pol} is incorrect. Acceptable are: VV, VV+VH, Dual VV, VV+VH, Dual HV, Dual HH, HH, HH+HV, VV, Dual VH.')
+                error = True
+        
+    except ValueError:
+        print('Make sure that pols are separated by a comma.')
+        error = True
+    
+    
+    # Check that processing level is correct
+    processingLevel = args.get('processingLevel')
+    levels = ['GRD_HS', 'GRD_HD', 'GRD_MS', 'GRD_MD', 'GRD_FD', 'SLC']
+    
+    if processingLevel not in levels:
+        print('Incorrect processing level. Acceptable are: GRD_HS, GRD_HD, GRD_MS, GRD_MD, GRD_FD, SLC.')
+        error = True
+    
+    
+    
+    
+    
+    # Make sure the processing parameters make sense.
+    if processingLevel == 'GRD_HD':
+        if slcSplit or slcDeburst or polarimetrickSpeckleFiltering:
+            print('Faulty processing parameters! GRD cannot be processed with slcSplit, slcDeburst, or polarimetrickSpeckleFiltering parameters.')
+            error = True
+                 
+            
+    if error:
+        print('Terminating process. Check the parameters and run again.')
+        parent_pid = os.getppid()
+        os.kill(parent_pid, signal.SIGTERM)
 
     
 def main():
+    
+    check_processing_parameters()
+    
     # Get input arguments
     source_path = sys.argv[1]
     result_path = sys.argv[2]
