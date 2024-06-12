@@ -491,18 +491,6 @@ def main():
         
     else:
         print('Timeseries not done.')
-            
-    
-        ds = xr.Dataset(
-        {'temperature': (('date', 'geometry'), grid['predicted_temp'].values)},
-        {'snow': (('date', 'geometry'), grid['predicted_snow'].values)},
-        {'precipitation_amount': (('date', 'geometry'), grid[grid['predicted_pre_amount']].values)},
-        {'precipitation_intensity': (('date', 'geometry'), grid[grid['predicted_pre_intensity']].values)},
-        coords={
-            'date': dates,
-            'geometry': grid['geometry']
-                }
-            )
 
 
 if __name__ == "__main__":
