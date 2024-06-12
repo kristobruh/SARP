@@ -12,6 +12,7 @@ from shapely import wkt
 import xarray as xr
 import datetime
 from scipy.stats import zscore
+import sqlite3
 
 try:
     from fmiopendata.wfs import download_stored_query
@@ -69,12 +70,18 @@ def parse_file_info(data_path):
     # Loop over each GeoTIFF file
     for tiff_file in tiff_files:
         # Parse time from filename
-        time = os.path.splitext(tiff_file)[0].split('_')[-2]
+        time = os.path.splitext(tiff_file)[0].split('_')[0]
         # Convert time to datetime format
         time = pd.to_datetime(time, format='%Y%m%d')
         
+        product_type = os.path.splitext(tiff_file)[0].split('_')[1]
+        direction = os.path.splitext(tiff_file)[0].split('_')[2]
+        rel_orbit = os.path.splitext(tiff_file)[0].split('_')[3]
+        look = os.path.splitext(tiff_file)[0].split('_')[4]
+        
         # Add the time and full filename to the DataFrame
-        df = pd.concat([df, pd.DataFrame({'TIME': [time], 'name': [tiff_file]})], ignore_index=True)
+        df = pd.concat([df, pd.DataFrame({'TIME': [time], 'name': [tiff_file], 'product type':[product_type], 'direction':[direction], 'orbit':[rel_orbit], 'look':[look]})], ignore_index=True)
+        
 
         i -= 1
         
@@ -540,7 +547,7 @@ def calculate_first_freeze(ice_fraction, dates):
 
     return freezing_date
 
-def calculate_statistics(VV, VH, dates, output_path):
+def calculate_statistics(VV, VH, dates, path, identifier, df):
     '''
     Calculates statistics for all bands and saves them to a csv.
     
@@ -559,34 +566,50 @@ def calculate_statistics(VV, VH, dates, output_path):
     VV_min = []
     VV_max = []
     VV_std = []
+    VV_median = []
     VH_mean = []
     VH_min = []
     VH_max = []
     VH_std = []
+    VH_median = []
+    identifier_list = []
+    counts = []
+    products = df['product type'].tolist()
+    directions = df['direction'].tolist()
+    orbits = df['orbit'].tolist()
+    looks = df['look'].tolist()
+    output_path = os.path.join(path,identifier,f'{identifier}_statistics.csv')
 
     # Iterate over each date
     for vv_band, vh_band in zip(VV, VH):
+        
         # Calculate statistics for VV band
-        vv_mean = np.nanmean(vv_band)
-        vv_min = np.nanmin(vv_band)
-        vv_max = np.nanmax(vv_band)
-        vv_std = np.nanstd(vv_band)
+        vv_mean = float(np.nanmean(vv_band))
+        vv_min = float(np.nanmin(vv_band))
+        vv_max = float(np.nanmax(vv_band))
+        vv_std = float(np.nanstd(vv_band))
+        vv_median = float(np.nanmedian(vv_band))
         
         # Calculate statistics for VH band
-        vh_mean = np.nanmean(vh_band)
-        vh_min = np.nanmin(vh_band)
-        vh_max = np.nanmax(vh_band)
-        vh_std = np.nanstd(vh_band)
+        vh_mean = float(np.nanmean(vh_band))
+        vh_min = float(np.nanmin(vh_band))
+        vh_max = float(np.nanmax(vh_band))
+        vh_std = float(np.nanstd(vh_band))
+        vh_median = float(np.nanmedian(vh_band))
         
         # Append statistics to lists
         VV_mean.append(vv_mean)
         VV_min.append(vv_min)
         VV_max.append(vv_max)
         VV_std.append(vv_std)
+        VV_median.append(vv_median)
         VH_mean.append(vh_mean)
         VH_min.append(vh_min)
         VH_max.append(vh_max)
         VH_std.append(vh_std)
+        VH_median.append(vh_median)
+        identifier_list.append(identifier)
+        counts.append(np.count_nonzero(~np.isnan(vv_band)))
 
     # Write statistics to CSV file
     with open(output_path, 'w', newline='') as csvfile:
@@ -594,6 +617,45 @@ def calculate_statistics(VV, VH, dates, output_path):
         writer.writerow(['Date', 'VV Mean', 'VV Min', 'VV Max', 'VV Std', 'VH Mean', 'VH Min', 'VH Max', 'VH Std'])
         for date, vv_mean, vv_min, vv_max, vv_std, vh_mean, vh_min, vh_max, vh_std in zip(dates, VV_mean, VV_min, VV_max, VV_std, VH_mean, VH_min, VH_max, VH_std):
             writer.writerow([date, vv_mean, vv_min, vv_max, vv_std, vh_mean, vh_min, vh_max, vh_std])
+            
+            
+            
+            
+    db_path = os.path.join(path, 'SQ_database.db')
+
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+
+        # Create the table if it doesn't exist
+        cursor.execute('''CREATE TABLE IF NOT EXISTS data (
+                            id INTEGER,
+                            date INTEGER,
+                            orbit TEXT,
+                            product TEXT,
+                            direction TEXT,
+                            look TEXT,
+                            count INTEGER,
+                            vv_mean REAL,
+                            vv_min REAL,
+                            vv_max REAL,
+                            vv_std REAL,
+                            vv_median REAL,
+                            vh_mean REAL,
+                            vh_min REAL,
+                            vh_max REAL,
+                            vh_std REAL,
+                            vh_median REAL
+                        )''')
+
+        # Iterate over data and insert into the table
+        for identifier, date, orbit, product, direction, look, count, vv_mean, vv_min, vv_max, vv_std, vv_median, vh_mean, vh_min, vh_max, vh_std, vh_median in zip(identifier_list, dates, orbits, products, directions, looks, counts, VV_mean, VV_min, VV_max, VV_std, VV_median, VH_mean, VH_min, VH_max, VH_std, VH_median):
+            # Convert date to integer format (YYYYMMDD)
+            date = int(datetime.datetime.strptime(date, "%Y-%m-%d").strftime("%Y%m%d"))
+            # Insert data into the table
+            cursor.execute('''INSERT INTO data (id, date, orbit, product, direction, look, count, vv_mean, vv_min, vv_max, vv_std, vv_median, vh_mean, vh_min, vh_max, vh_std, vh_median) 
+                              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', 
+                              (identifier, date, orbit, product, direction, look, count, vv_mean, vv_min, vv_max, vv_std, vv_median, vh_mean, vh_min, vh_max, vh_std, vh_median))
+
 
 
 def find_reflector(path, upscale_factor):
@@ -1472,10 +1534,15 @@ def main():
     movingAverage = args.get('movingAverage') == 'True'
     movingAverageWindow = int(args.get('movingAverageWindow'))
     reflector = args.get('reflector') == 'True'
+    processingLevel = args.get('processingLevel')
     
     
     if timeseries:
-
+        
+        if processingLevel == 'SLC':
+            print('Timeseries is not supported for SLC at this moment.')
+            sys.exit()
+            
         source_path = sys.argv[1]
         path = sys.argv[2]
         bulkDownload = sys.argv[3].lower() == 'true'
@@ -1513,7 +1580,7 @@ def main():
         combined_xr.to_netcdf(os.path.join(path,identifier,'VV_VH.nc'))
 
         # Calculate statistics
-        calculate_statistics(VV, VH, dates, os.path.join(path,identifier,f'{identifier}_statistics.csv'))
+        calculate_statistics(VV, VH, dates, path, identifier, df)
         print('Statistics completed.')
 
 
