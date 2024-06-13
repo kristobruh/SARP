@@ -3,39 +3,61 @@
 pathToClient	/users/kristofe/access/asf_client.txt
 start	2021-06-01
 end	2021-06-10
+
 # Preferred season, eg: 15,200. If not desired, set to none.
 season	none
+
 # This is often best set at IW.
 beamMode	IW
+
 # Depending on what you want, both ASCENDING and DESCENDING work.
 flightDirection	ASCENDING
+
 # This is valid in Finland.
 polarization	VV,VV+VH
+
 # GRD_HD for Ground Range detected, SLC for complex images.
 processingLevel	SLC
+
 # Amount of simultaneous downloads. 8 is good.
 processes	8
 
 
 
 ### PROCESSING PARAMETERS ###
+
+# You can use one of three preset processing pipelines: GRD, SLC, polSAR.
+# Alternatively, you can set it at False, and define the processing parameters yourself.
+
+process	polSAR
+
+
 # NOTE: slcSplit and slcDeburst only apply for SLC images.
 # Example processing pipelines:
 # GRD: applyOrbitFile, thermalNoiseRemoval, calibration, speckleFiltering, terrainCorrection, linearToDb.
 # SLC: slcSplit, applyOrbitFile, calibration, slcDeburst, speckleFiltering, terrainCorrection.
 
 slcSplit	True
+
 applyOrbitFile	True
+
 thermalNoiseRemoval	False
+
 calibration	True
+complexOutput	True
+
 slcDeburst	True
+
 speckleFiltering	False
-polarimetricSpeckleFiltering	False
+polarimetricSpeckleFiltering	True
 filterResolution	5
+
 terrainCorrection	True
 terrainResolution	10.0
+
 bandMaths	False
 bandMathsExpression	Sigma0_VV_db + 0.002
+
 linearToDb	False
 
 
@@ -43,8 +65,11 @@ linearToDb	False
 
 ### POST-PROCESSING PARAMETERS ###
 # Timeseries analysis is currently not supported on SLC.
-timeseries	True
+timeseries	False
+
 movingAverage	False
 movingAverageWindow	2
+
 # If reflector is enabled, the code finds a brightest spot in the image and calculates timeseries on that one spot.
 reflector	False
+downloadWeather	False
