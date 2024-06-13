@@ -159,7 +159,7 @@ def do_thermal_noise_removal(source):
     return output
 
 
-def do_calibration(source, polarization, pols):
+def do_calibration(source, polarization, pols, complexOutput):
     '''
     Calibrate SAR image based on the configuration files within, based on snappy.
     
@@ -185,9 +185,11 @@ def do_calibration(source, polarization, pols):
     #else:
     #    print("different polarization!")
     #parameters.put('selectedPolarisations', pols)
-
-    parameters.put('outputImageInComplex', False)
-    parameters.put('outputSigmaBand', True)
+    if complexOutput:
+        #parameters.put('outputSigmaBand', False)
+        parameters.put('outputImageInComplex', True)
+    else:
+        parameters.put('outputSigmaBand', True)
     parameters.put('outputGammaBand', False)
     parameters.put('outputBetaBand', False)
     
@@ -539,22 +541,69 @@ def main():
     # --------START READ VARIABLES ---------
     # Read arguments from the text file
     args = read_arguments_from_file(os.path.join(os.path.dirname(os.getcwd()), 'arguments.csv'))
-    polarization = args.get('polarization')
     
-    
-    slcSplit = args.get('slcSplit') == 'True'
-    applyOrbitFile = args.get('applyOrbitFile') == 'True'
-    thermalNoiseRemoval = args.get('thermalNoiseRemoval') == 'True'
-    calibration = args.get('calibration') == 'True'
-    slcDeburst = args.get('slcDeburst') == 'True'
-    speckleFiltering = args.get('speckleFiltering') == 'True'
-    polarimetricSpeckleFiltering = args.get('polarimetricSpeckleFiltering') == 'True'
-    filterResolution = args.get('filterResolution')
-    terrainCorrection = args.get('terrainCorrection') == 'True'
-    terrainResolution = args.get('terrainResolution')
-    bandMaths = args.get('bandMaths') == 'True'
-    bandMathExpression = args.get('bandMathsExpression')
-    linearToDb = args.get('linearToDb') == 'True'
+    if args.get('process') == 'GRD':
+        applyOrbitFile = True
+        thermalNoiseRemoval = True
+        calibration = True
+        complexOutput = False
+        speckleFiltering = True
+        filterResolution = 5
+        terrainCorrection = True
+        terrainResolution = 10.0
+        bandMaths = False
+        linearToDb = True
+        slcSplit = False
+        slcDeburst = False
+        polarimetricSpeckleFiltering = False
+        
+    elif args.get('process') == 'SLC':
+        applyOrbitFile = True
+        thermalNoiseRemoval = False
+        calibration = True
+        complexOutput = True
+        speckleFiltering = True
+        filterResolution = 5
+        terrainCorrection = True
+        terrainResolution = 10.0
+        bandMaths = False
+        linearToDb = False
+        slcSplit = True
+        slcDeburst = True
+        polarimetricSpeckleFiltering = False
+        
+    elif args.get('process') == 'polSAR':
+        applyOrbitFile = True
+        thermalNoiseRemoval = False
+        calibration = True
+        complexOutput = True
+        speckleFiltering = False
+        filterResolution = 5
+        terrainCorrection = True
+        terrainResolution = 10.0
+        bandMaths = False
+        linearToDb = False
+        slcSplit = True
+        slcDeburst = True
+        polarimetricSpeckleFiltering = True
+        
+        
+    else:
+        polarization = args.get('polarization') 
+        slcSplit = args.get('slcSplit') == 'True'
+        applyOrbitFile = args.get('applyOrbitFile') == 'True'
+        thermalNoiseRemoval = args.get('thermalNoiseRemoval') == 'True'
+        calibration = args.get('calibration') == 'True'
+        complexOutput = args.get('complexOutput') == 'True'
+        slcDeburst = args.get('slcDeburst') == 'True'
+        speckleFiltering = args.get('speckleFiltering') == 'True'
+        polarimetricSpeckleFiltering = args.get('polarimetricSpeckleFiltering') == 'True'
+        filterResolution = args.get('filterResolution')
+        terrainCorrection = args.get('terrainCorrection') == 'True'
+        terrainResolution = args.get('terrainResolution')
+        bandMaths = args.get('bandMaths') == 'True'
+        bandMathExpression = args.get('bandMathsExpression')
+        linearToDb = args.get('linearToDb') == 'True'
     
     
     # Read arguments from the parent script
@@ -566,7 +615,6 @@ def main():
     pathToDem = args.pathToDem
     outPath = dataPath
     
-    #print(f'Working on {image1} and {image2}.')
     
     # ---------END READ VARIABLES ----------
     
@@ -660,7 +708,7 @@ def main():
         
     #2: CALIBRATE
     if calibration:
-        product = do_calibration(product, polarization, pols)
+        product = do_calibration(product, polarization, pols, complexOutput)
         
         
     if slcDeburst:
