@@ -1,4 +1,4 @@
-import os, subprocess, sys, csv
+import os, subprocess, sys, csv, argparse
 import numpy as np
 import geopandas as gpd
 from shapely.geometry import Polygon, Point
@@ -40,6 +40,21 @@ def read_arguments_from_file(file_path):
                 arguments[arg_name.strip()] = arg_value.strip()
     return arguments 
 
+
+def parse_arguments():
+    """
+    Parse arguments given by the parent script.
+    
+    Input:
+    - Arguments defined in the parent script, full paths to images to be processed.
+    
+    Output:
+    - Dictionary containing the arguments.
+    """
+    parser = argparse.ArgumentParser(description="Download weather data.")
+    parser.add_argument("source_path", type=str, help="Path to input shapefile.")
+    parser.add_argument("result_path", type=str, help="Path to output.")
+    return parser.parse_args()
 
 
 
@@ -477,20 +492,15 @@ def find_bounds(pathToShapefile):
 def main():
     print('Downloading weather data...')
     args = read_arguments_from_file(os.path.join(os.path.dirname(os.getcwd()), 'arguments.csv'))
-    timeseries = args.get('timeseries') == 'True'
-    movingAverage = args.get('movingAverage') == 'True'
-    movingAverageWindow = int(args.get('movingAverageWindow'))
     start = args.get('start')
     end = args.get('end')
+
+    args = parse_arguments()
+    source_path = args.source_path
+    result_path = args.result_path
     
-    if timeseries:
-        source_path = sys.argv[1]
-        path = sys.argv[2]
-        find_meteorological_data(path, source_path, start, end)
-        print('Weather data downloaded.')
-        
-    else:
-        print('Timeseries not done.')
+    find_meteorological_data(result_path, source_path, start, end)
+    print('Weather data downloaded.')
 
 
 if __name__ == "__main__":
