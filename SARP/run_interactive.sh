@@ -44,8 +44,17 @@ script_folder=$(dirname "$0")
 
 module load geoconda
 python download_packages.py
-python initialize.py "$source_path" "$data_path" "$separate" "$bulk_download"
 
+# Trap the termination signal and call the terminate function
+terminate() {
+    echo "Parent shell script terminated."
+    exit 1
+}
+trap terminate SIGTERM
+python initialize.py "$source_path" "$data_path" "$separate" "$bulk_download"
+if [ $? -ne 0 ]; then
+    exit 1
+fi
 
 if [ "$bulk_download" = true ]; then
     
@@ -57,9 +66,6 @@ if [ "$bulk_download" = true ]; then
     
     # Download orbit files
     python download_orbits.py "$data_path" "$bulk_download"
-    
-    # Download weather data
-    python download_weather.py "$source_path" "$data_path"
     
     # Process all images, subset to greatest extent
     module load snap
