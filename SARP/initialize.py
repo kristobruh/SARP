@@ -1,4 +1,4 @@
-import sys, os, signal, csv
+import sys, os, signal, csv, subprocess
 from datetime import datetime
 import geopandas as gpd
 from shapely.geometry import Point
@@ -191,7 +191,6 @@ def check_processing_parameters():
         
         
     # Check if season is correct
-    
     season = args.get('season')
     
     if season != 'none':
@@ -210,7 +209,7 @@ def check_processing_parameters():
     beamMode = args.get('beamMode')
     modes = ['EW', 'IW', 'S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'WV']
     if beamMode not in modes:
-        print('Unacceptable beam mode.')
+        print('Error in beam mode. Acceptable are: EW, IW, S1, S2, S3, S4, S5, S6, WV.')
         error = True
             
     # Check that flight direction is correct
@@ -245,25 +244,78 @@ def check_processing_parameters():
         error = True
     
     
+    # Make sure that processing values are boolean
     
+    def to_bool(value):
+        if isinstance(value, str):
+            if value.lower() in ('true', '1'):
+                return True
+            elif value.lower() in ('false', '0'):
+                return False
+        return value
     
+    slcSplit = args.get('slcSplit')
+    applyOrbitFile = args.get('applyOrbitFile')
+    thermalNoiseRemoval = args.get('thermalNoiseRemoval')
+    calibration = args.get('calibration')
+    slcDeburst = args.get('slcDeburst')
+    speckleFiltering = args.get('speckleFiltering')
+    polarimetricSpeckleFiltering = args.get('polarimetricSpeckleFiltering')
+    terrainCorrection = args.get('terrainCorrection')
+    bandMaths = args.get('bandMaths')
+    linearToDb = args.get('linearToDb')
+    args_list = [slcSplit, applyOrbitFile, thermalNoiseRemoval, calibration, slcDeburst, speckleFiltering, polarimetricSpeckleFiltering, terrainCorrection, bandMaths, linearToDb]
+    args_names = ['slcSplit', 'applyOrbitFile', 'thermalNoiseRemoval', 'calibration', 'slcDeburst', 'speckleFiltering', 'polarimetricSpeckleFiltering', 'terrainCorrection', 'bandMaths', 'linearToDb']
     
-    # Make sure the processing parameters make sense.
-    if processingLevel == 'GRD_HD':
-        if slcSplit or slcDeburst or polarimetrickSpeckleFiltering:
-            print('Faulty processing parameters! GRD cannot be processed with slcSplit, slcDeburst, or polarimetrickSpeckleFiltering parameters.')
+    for arg, arg_name in zip(args_list, args_names):
+        arg = to_bool(arg)
+        if not isinstance(arg, bool):
+            print(f'{arg_name} not boolean ({arg}). Set it to either True or False.')
             error = True
+    
+    
+    # Check filter value
+    try:
+        filterResolution = int(args.get('filterResolution'))
+    except ValueError:
+        print(f'Error: filterResolution not an integer.')
+        error = True
+        
+    # Check terrain value
+    try: 
+        terrainResolution = float(args.get('terrainResolution'))
+    except ValueError:
+        print('Error: terrainResolution not a float value.')
+        error = True
+    
                  
-            
+    # Terminate script
     if error:
         print('Terminating process. Check the parameters and run again.')
         parent_pid = os.getppid()
         os.kill(parent_pid, signal.SIGTERM)
+        sys.exit(1)
+        
+    return args
 
+        
+def download_bulk_weather(source_path, result_path):
+    """
+    Caller function to bulk weather data download.
+   
+    """
+    
+    # Construct the command to run SarPipeline.py with the specified arguments
+    command = [
+        'python3', 'download_weather.py', source_path, result_path]
+    
+    # Run the command using subprocess
+    subprocess.run(command)
+    
     
 def main():
     
-    check_processing_parameters()
+    args = check_processing_parameters()
     
     # Get input arguments
     source_path = sys.argv[1]
@@ -282,6 +334,9 @@ def main():
     folder_error = os.path.join(result_path, 'Error')
     os.makedirs(folder_slurm, exist_ok=True)
     os.makedirs(folder_error, exist_ok=True)
+    
+    if args.get('downloadWeather') == 'True':
+        download_bulk_weather(source_path, result_path)
     
     
     
