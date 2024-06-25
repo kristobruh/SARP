@@ -240,6 +240,8 @@ Kristofer Mäkinen
 
 kristofer.makinen@maanmittauslaitos.fi
 
+When oublishing, additional credit should be given to the creators of asf_search and download_eofs.
+
 ## License
 CC 4.0
 
