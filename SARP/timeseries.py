@@ -412,7 +412,6 @@ def extract_VV(masked_path):
     - VHs (list): A list containing all the VH raster arrays.
     - dates (list): A list of dates corresponding to the arrays.
     '''
-    from datetime import datetime
     # Get list of TIFF filenames
     tiff_files = [file for file in os.listdir(masked_path) if file.endswith('.tif')]
     
@@ -429,7 +428,7 @@ def extract_VV(masked_path):
         # Extract date from filename
         date_str = tiff_file.split('_')[0]
         # Parse date string to datetime object
-        date = datetime.strptime(date_str, '%Y%m%d').strftime('%Y-%m-%d')
+        date = datetime.datetime.strptime(date_str, '%Y%m%d').strftime('%Y-%m-%d')
         
         # Open the GeoTIFF file
         with rasterio.open(os.path.join(masked_path, tiff_file)) as src:
@@ -1437,7 +1436,6 @@ def extract_VV_meteo(path, position, upscale_factor):
     - VHs (list): A list containing all the VH raster arrays.
     - dates (list): A list of dates corresponding to the arrays.
     '''
-    from datetime import datetime
     # Get list of TIFF filenames
     tiff_files = [file for file in os.listdir(path) if file.endswith('.tif')]
     
@@ -1454,7 +1452,7 @@ def extract_VV_meteo(path, position, upscale_factor):
         # Extract date from filename
         date_str = tiff_file.split('_')[-2]
         # Parse date string to datetime object
-        date = datetime.strptime(date_str, '%Y%m%d').strftime('%Y-%m-%d')
+        date = datetime.datetime.strptime(date_str, '%Y%m%d').strftime('%Y-%m-%d')
         
         # Open the GeoTIFF file
         with rasterio.open(os.path.join(path, tiff_file)) as src:
@@ -1527,6 +1525,17 @@ def extract_intersected_data(netcdf_path, target_shapefile_path):
     return temperature, snows, precipitation_amount, precipitation_intensity, dates
 
 
+def extract_polSAR():
+    #TODO:
+    # Mask and save rasters
+    # Extract band info
+    # Resize rasters
+    # Save all bands to sql databse format
+    
+    # It might be best to create for loops for each band, might get messy otherwise
+    return 1
+
+
 def main():
     
     args = read_arguments_from_file(os.path.join(os.path.dirname(os.getcwd()), 'arguments.csv'))
@@ -1543,62 +1552,66 @@ def main():
             print('Timeseries is not supported for SLC at this moment.')
             sys.exit()
             
-        source_path = sys.argv[1]
-        path = sys.argv[2]
-        bulkDownload = sys.argv[3].lower() == 'true'
-        identifier = sys.argv[4]
-
-        if not bulkDownload:
-            data_path = os.path.join(path,identifier,'tiffs')
+        elif: processingLevel == 'polSAR':
+            print('In progress.')
+           
         else:
-            data_path = os.path.join(path,'tiffs')
+            source_path = sys.argv[1]
+            path = sys.argv[2]
+            bulkDownload = sys.argv[3].lower() == 'true'
+            identifier = sys.argv[4]
 
-        masked_path = os.path.join(path,identifier,'masked_tiffs')
-        path_to_shapefile = os.path.join(path, identifier, 'shapefile', f'{identifier}.shp')
+            if not bulkDownload:
+                data_path = os.path.join(path,identifier,'tiffs')
+            else:
+                data_path = os.path.join(path,'tiffs')
 
-        df = parse_file_info(data_path)
-        print('File parsing completed.')
+            masked_path = os.path.join(path,identifier,'masked_tiffs')
+            path_to_shapefile = os.path.join(path, identifier, 'shapefile', f'{identifier}.shp')
 
-        if movingAverage:
-            averaged_path = os.path.join(path,identifier,'averaged_tiffs')
-            calculate_average_raster(df, data_path, averaged_path, movingAverageWindow)
-            print('Averaging done.')
-            mask_and_save_rasters(averaged_path, path_to_shapefile, masked_path)
-        else:
-            mask_and_save_rasters(data_path, path_to_shapefile, masked_path)
-        print('Masking done.')
-        gc.collect()
+            df = parse_file_info(data_path)
+            print('File parsing completed.')
 
-        # Save the bands as netCDF as well
-        VV,VH, dates = extract_VV(masked_path)
-        VV = resize_to_smallest(VV)
-        VH = resize_to_smallest(VH)
-        VV_xr = create_xarray(VV, dates, flip=True)
-        VH_xr = create_xarray(VH, dates, flip=True)
-        combined_xr = xr.combine_nested([VV_xr,VH_xr], concat_dim='band')
-        combined_xr['band'] = ['VV', 'VH']
-        combined_xr.to_netcdf(os.path.join(path,identifier,'VV_VH.nc'))
+            if movingAverage:
+                averaged_path = os.path.join(path,identifier,'averaged_tiffs')
+                calculate_average_raster(df, data_path, averaged_path, movingAverageWindow)
+                print('Averaging done.')
+                mask_and_save_rasters(averaged_path, path_to_shapefile, masked_path)
+            else:
+                mask_and_save_rasters(data_path, path_to_shapefile, masked_path)
+            print('Masking done.')
+            gc.collect()
 
-        # Calculate statistics
-        calculate_statistics(VV, VH, dates, path, identifier, df)
-        print('Statistics completed.')
+            # Save the bands as netCDF as well
+            VV,VH, dates = extract_VV(masked_path)
+            VV = resize_to_smallest(VV)
+            VH = resize_to_smallest(VH)
+            VV_xr = create_xarray(VV, dates, flip=True)
+            VH_xr = create_xarray(VH, dates, flip=True)
+            combined_xr = xr.combine_nested([VV_xr,VH_xr], concat_dim='band')
+            combined_xr['band'] = ['VV', 'VH']
+            combined_xr.to_netcdf(os.path.join(path,identifier,'VV_VH.nc'))
+
+            # Calculate statistics
+            calculate_statistics(VV, VH, dates, path, identifier, df)
+            print('Statistics completed.')
 
 
-        # Do reflector timeseries
-        if reflector:
-            upscale_factor = 10
-            VV_max, VH_max, VV_arr, max_indices, filtered_indices, position = find_reflector(data_path, upscale_factor)
-            make_location_fig(path,identifier,max_indices,filtered_indices,VV_arr,position)
-            VV,VH, dates = extract_VV_meteo(data_path, position, upscale_factor)
-        
-        # Use either ready weather data, or download them again
-        if bulkDownload:
-            temperature, snows, precipitation_amount, precipitation_intensity, meteo_dates = extract_intersected_data(os.path.join(path,'weather.nc'), path_to_shapefile)
-        else:
-            temperature, snows, precipitation_amount,precipitation_intensity, meteo_dates = find_meteorological_data(data_path, path, identifier, path_to_shapefile)
-        make_plot(path,identifier,temperature,precipitation_amount,snows,VV,VH,dates,meteo_dates, reflector)
-        print('Plots created, analysis done. \n')
-        
+            # Do reflector timeseries
+            if reflector:
+                upscale_factor = 10
+                VV_max, VH_max, VV_arr, max_indices, filtered_indices, position = find_reflector(data_path, upscale_factor)
+                make_location_fig(path,identifier,max_indices,filtered_indices,VV_arr,position)
+                VV,VH, dates = extract_VV_meteo(data_path, position, upscale_factor)
+
+            # Use either ready weather data, or download them again
+            if bulkDownload:
+                temperature, snows, precipitation_amount, precipitation_intensity, meteo_dates = extract_intersected_data(os.path.join(path,'weather.nc'), path_to_shapefile)
+            else:
+                temperature, snows, precipitation_amount,precipitation_intensity, meteo_dates = find_meteorological_data(data_path, path, identifier, path_to_shapefile)
+            make_plot(path,identifier,temperature,precipitation_amount,snows,VV,VH,dates,meteo_dates, reflector)
+            print('Plots created, analysis done. \n')
+
     else:
         print('Timeseries not done.')
 
