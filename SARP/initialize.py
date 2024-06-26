@@ -209,7 +209,7 @@ def check_processing_parameters():
     beamMode = args.get('beamMode')
     modes = ['EW', 'IW', 'S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'WV']
     if beamMode not in modes:
-        print('Error in beam mode. Acceptable are: EW, IW, S1, S2, S3, S4, S5, S6, WV.')
+        print(f'Error in beam mode ({beamMode}). Acceptable are: EW, IW, S1, S2, S3, S4, S5, S6, WV.')
         error = True
             
     # Check that flight direction is correct
@@ -227,7 +227,7 @@ def check_processing_parameters():
         pols = args.get('polarization').strip().split(',')
         for pol in pols:
             if pol not in target_pols:
-                print(f'Error: Pol {pol} is incorrect. Acceptable are: VV, VV+VH, Dual VV, VV+VH, Dual HV, Dual HH, HH, HH+HV, VV, Dual VH.')
+                print(f'Error: Pol {pol} is incorrect. Acceptable polarizations are: VV, VV+VH, Dual VV, VV+VH, Dual HV, Dual HH, HH, HH+HV, VV, Dual VH.')
                 error = True
         
     except ValueError:
@@ -240,7 +240,7 @@ def check_processing_parameters():
     levels = ['GRD_HS', 'GRD_HD', 'GRD_MS', 'GRD_MD', 'GRD_FD', 'SLC']
     
     if processingLevel not in levels:
-        print('Incorrect processing level. Acceptable are: GRD_HS, GRD_HD, GRD_MS, GRD_MD, GRD_FD, SLC.')
+        print(f'Incorrect processing level ({processingLevel}). Acceptable processing leves are: GRD_HS, GRD_HD, GRD_MS, GRD_MD, GRD_FD, SLC.')
         error = True
     
     
@@ -289,6 +289,23 @@ def check_processing_parameters():
         error = True
     
                  
+        
+        
+    
+   
+    # Check that processing matches the download processing parameter:
+    process = args.get('process')
+    if processingLevel == 'GRD_HD':
+        if process != 'GRD' and process != 'False':
+            print(f'Processing preset ({process}) does not match the download processing parameter ({processingLevel}).')
+            error = True
+            
+    elif processingLevel == 'SLC':
+        if process != 'SLC' and process != 'polSAR' and process != 'False':
+            print(f'Processing preset ({process}) does not match the download processing parameter ({processingLevel}).')
+            error = True
+    
+    
     # Terminate script
     if error:
         print('Terminating process. Check the parameters and run again.')
