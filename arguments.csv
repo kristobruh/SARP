@@ -1,8 +1,8 @@
 ### DOWNLOAD PARAMETERS ###
 # Add the full path to your ASF credentials file. The file should be a .txt with one row, with structure : username<tab>password .
 pathToClient	/users/kristofe/access/asf_client.txt
-start	2021-06-01
-end	2021-06-10
+start	2021-01-01
+end	2021-01-07
 
 # Preferred season, eg: 15,200. If not desired, set to none.
 season	none
@@ -16,7 +16,7 @@ flightDirection	ASCENDING
 # This is valid in Finland.
 polarization	VV,VV+VH
 
-# GRD_HD for Ground Range detected, SLC for complex images.
+# GRD_HD for Ground Range detected, SLC for complex and polSAR images.
 processingLevel	SLC
 
 # Amount of simultaneous downloads. 8 is good.
@@ -46,13 +46,15 @@ thermalNoiseRemoval	False
 calibration	True
 complexOutput	True
 
-slcDeburst	True
+slcDeburst	False
 
 speckleFiltering	False
-polarimetricSpeckleFiltering	True
+polarimetricSpeckleFiltering	False
 filterResolution	5
 
-terrainCorrection	True
+polarimetricParameters	True
+
+terrainCorrection	False
 terrainResolution	10.0
 
 bandMaths	False
