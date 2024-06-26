@@ -56,6 +56,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+
 if [ "$bulk_download" = true ]; then
     
     # Download all files over target area
