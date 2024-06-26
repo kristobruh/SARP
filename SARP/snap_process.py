@@ -489,7 +489,7 @@ def TOPSAR_split(source,wkt):
     wkt (str) - WKT of the subset area, given in WGS84 projection.
     
     Output:
-    output (productIO) - Subsetted product.
+    output (productIO) - Split product.
     ''' 
     print('\tSplitting SLC...')
     parameters = HashMap()
@@ -522,18 +522,88 @@ def polarimetric_speckle_filtering(source,filterResolution):
     source (productIO) - SAR image with auxiliary files.
     
     Output:
-    output (productIO) - Subsetted product.
+    output (productIO) - Polarimetrically speckle filtered product.
     ''' 
     print('\tPolarimetric spekle filtering...')
     parameters = HashMap()
-    parameters.put('filter','Box Car Filter')
+    parameters.put('filter','Refined Lee Filter')
+    parameters.put('numLooksStr','1')
+    parameters.put('filterSize',filterResolution)
     resolution = f'{filterResolution}x{filterResolution}'
     parameters.put('windowSize',resolution)
     output = GPF.createProduct('Polarimetric-Speckle-Filter', parameters, source)
     
     return output
-    
 
+def polarimetric_decomposition(source):
+    '''
+    Calculate entropy, anisotropy, and alpha of polSAR.
+    
+    Input:
+    source (productIO) - SAR image with auxiliary files.
+    
+    Output:
+    output (productIO) - Subsetted product.
+    ''' 
+    print('\tCalculating entropy, anisotropy, and alpha...')
+    parameters = HashMap()
+    parameters.put('decomposition','H-Alpha Dual Pol Decomposition')
+    parameters.put('outputHAAlpha','true')
+    parameters.put('windowSize', 5)
+    parameters.put('outputTouziParamSet0', 'true')
+    parameters.put('outputHuynenParamSet0', 'true')
+    output = GPF.createProduct('Polarimetric-Decomposition', parameters, source)
+    
+    return output   
+
+
+def polarimetric_matrices(source):
+    
+    
+    print('\tCreating polarimetric C2 matrix...')
+    parameters = HashMap()
+    parameters.put('matrix','C2')
+    output = GPF.createProduct('Polarimetric-Matrices', parameters, source)
+    
+    return output
+    
+def polarimetric_parameters(source):
+    
+    
+    print('\tCalculating Stokes parameters...')
+    parameters = HashMap()
+    parameters.put('outputStokesVector','false')
+    parameters.put('outputDegreeOfPolarization', 'true')
+    parameters.put('outputDegreeOfDepolarization', 'true')
+    parameters.put('outputDegreeOfCircularity', 'true')
+    parameters.put('outputDegreeOfEllipticity', 'true')
+    parameters.put('outputCPR', 'true')
+    parameters.put('outputLPR', 'true')
+    parameters.put('outputRelativePhase', 'false')
+    parameters.put('outputAlphas', 'false')
+    parameters.put('outputConformity', 'false')
+    parameters.put('outputPhasePhi', 'false')
+    parameters.put('windowSizeXStr', '5')
+    parameters.put('windowSizeYStr', '5')
+    output = GPF.createProduct('CP-Stokes-Parameters', parameters, source)
+    
+    return output
+
+
+def stack(source1,source2):
+    
+    print('\tStacking polSAR parameters...')
+    
+    product_set = []
+    product_set.append(source1)
+    product_set.append(source2)
+    parameters = HashMap()
+    parameters.put('resamplingType','NONE')
+    parameters.put('initialOffsetMethod','Orbit')
+    parameters.put('extent','Master')
+    output = GPF.createProduct('CreateStack', parameters, product_set)
+    
+    return output
 
 
 def main():
@@ -541,8 +611,8 @@ def main():
     # --------START READ VARIABLES ---------
     # Read arguments from the text file
     args = read_arguments_from_file(os.path.join(os.path.dirname(os.getcwd()), 'arguments.csv'))
-    
-    if args.get('process') == 'GRD':
+    process = args.get('process')
+    if process == 'GRD':
         applyOrbitFile = True
         thermalNoiseRemoval = True
         calibration = True
@@ -556,8 +626,9 @@ def main():
         slcSplit = False
         slcDeburst = False
         polarimetricSpeckleFiltering = False
+        polarimetricParameters = False
         
-    elif args.get('process') == 'SLC':
+    elif process == 'SLC':
         applyOrbitFile = True
         thermalNoiseRemoval = False
         calibration = True
@@ -571,8 +642,9 @@ def main():
         slcSplit = True
         slcDeburst = True
         polarimetricSpeckleFiltering = False
+        polarimetricParameters = False
         
-    elif args.get('process') == 'polSAR':
+    elif process == 'polSAR':
         applyOrbitFile = True
         thermalNoiseRemoval = False
         calibration = True
@@ -583,9 +655,10 @@ def main():
         terrainResolution = 10.0
         bandMaths = False
         linearToDb = False
-        slcSplit = True
+        slcSplit = False
         slcDeburst = True
         polarimetricSpeckleFiltering = True
+        polarimetricParameters = True
         
         
     else:
@@ -598,6 +671,7 @@ def main():
         slcDeburst = args.get('slcDeburst') == 'True'
         speckleFiltering = args.get('speckleFiltering') == 'True'
         polarimetricSpeckleFiltering = args.get('polarimetricSpeckleFiltering') == 'True'
+        polarimetricParameters = args.get('polarimetricParameters') == 'True'
         filterResolution = args.get('filterResolution')
         terrainCorrection = args.get('terrainCorrection') == 'True'
         terrainResolution = args.get('terrainResolution')
@@ -723,6 +797,12 @@ def main():
     if polarimetricSpeckleFiltering:
         product = polarimetric_speckle_filtering(product,filterResolution)
 
+    if polarimetricParameters:
+        product_HAAlpha = polarimetric_decomposition(product)
+        #C2_matrix = polarimetric_matrices(product)
+        product_stokes = polarimetric_parameters(product)
+        product = stack(product_HAAlpha, product_stokes)
+
 
     #4: TERRAIN CORRECTION
     #define epsg:3067. This is atm hard-coded.
@@ -737,7 +817,7 @@ def main():
     #5 COVERT TO DB
     if linearToDb:
         product = do_linear_to_db(product)
-
+        
     #6: SUBSET
     wkt = shapefile_to_wkt(pathToShapefile, 'epsg:4326')
     product = do_subset(product, wkt)
@@ -766,12 +846,14 @@ def main():
 
     #9: WRITE
     print('Writing...')
-    # Cut name to only until date of acquisition
     filename = os.path.basename(image1)
-    time_str = filename.split('_')[4][:8]
+    if slcDeburst:
+        time_str = filename.split('_')[5][:8]
+    else:
+        time_str = filename.split('_')[4][:8]
     output_filename = f'{time_str}_{product_type}_{direction}_{rel_orbit}_{look}_processed.tif'
     ProductIO.writeProduct(product, os.path.join(dataPath, output_filename), 'GeoTIFF')
-    #ProductIO.writeProduct(product, dataPath + f'/{folder[:-47]}_processed', 'GeoTIFF')
+    
     print('Processing done. \n')
     gc.collect()
 
