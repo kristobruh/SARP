@@ -77,7 +77,7 @@ if [ "$bulk_download" = true ]; then
     for folder_path in "$data_path"/*/; do
         # Extract folder (lake_id) name
         id=$(basename "$folder_path")
-        if [ "$id" == "SLURM" ] || [ "$id" == "Error" ] || [ "$id" == "tiffs" ] || [ "$id" == "snap_cache" ]; then
+        if [ "$id" == "SLURM" ] || [ "$id" == "Error" ] || [ "$id" == "tiffs" ] || [ "$id" == "snap_cache" ] || [ "$id" == "*" ]; then
             continue
         fi
         echo "ID: $id"
