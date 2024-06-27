@@ -834,7 +834,7 @@ def main():
     rel_orbit = product.getMetadataRoot().getElement('Abstracted_Metadata').getAttribute('REL_ORBIT').getData()
     look = product.getMetadataRoot().getElement('Abstracted_Metadata').getAttribute('antenna_pointing').getData()
     
-    print(f'Product type: {product_type}, Orbit: {direction}, Relative orbit: {rel_orbit}, Look: {look}')
+    #print(f'Product type: {product_type}, Orbit: {direction}, Relative orbit: {rel_orbit}, Look: {look}')
     
     
     #metadata_root = product.getMetadataRoot()
@@ -845,6 +845,16 @@ def main():
     #        print(f"Attribute Name: {attribute_name}, Value: {attribute_value}")
 
     #9: WRITE
+    with open(os.path.join(os.path.dirname(dataPath), 'band_names.csv'), mode='w', newline='') as file:
+        writer = csv.writer(file)
+        for band in product.getBands():
+            if process == 'polSAR':
+                band_name = band.getName().split('_')[0]
+            else:
+                band_name = band.getName().split('_')[1]
+            writer.writerow([band_name])
+
+
     print('Writing...')
     filename = os.path.basename(image1)
     if slcDeburst:
