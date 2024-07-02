@@ -49,92 +49,108 @@ Before running the script in interactive, start a new job by `sinteractive -i`, 
 
 Example for running interactive: 
 
-`bash run_interactive.sh -s /path/to/shapefile/folder/ /path/to/results/folder/ -b -p `
+`bash run_interactive.sh -s /path/to/shapefile/folder/ -r /path/to/results/folder/ -b -p `
 
 
 
 **Batch**
 
-`sbatch run_batch.sh /path/to/shapefile/folder/ /path/to/results/folder/ `
+`sbatch run_batch.sh -s /path/to/shapefile/folder/ -r /path/to/results/folder/  -b -p`
 
 If you run the script in batch process mode, remember to set up the batch process paramters in `run_batch.sh`. It is recommended to first run it in interactive to ensure that all works.
 
 
 ## Examples
 
-### Example 1: GND processing with timeseries
+### Example 1: Interactive GND processing with timeseries
 
-First you should modify the `argument.txt` file to match with your desired download parameters and output:
+This example is run with the follwing `argument.txt` parameters:
 
 ```### DOWNLOAD PARAMETERS ###
 # Add the full path to your ASF credentials file. The file should be a .txt with one row, with structure : username<tab>password .
 pathToClient	/users/kristofe/access/asf_client.txt
-start	2021-06-01
-end	2021-06-20
+start	2021-01-01
+end	2021-01-10
+
 # Preferred season, eg: 15,200. If not desired, set to none.
 season	none
+
+# This is often best set at IW.
 beamMode	IW
+
+# Depending on what you want, both ASCENDING and DESCENDING work.
 flightDirection	ASCENDING
+
+# VV,VV+VH is valid in Finland.
 polarization	VV,VV+VH
-# SLC for complex images, or GRD_HD for ground range detected images.
+
+# GRD_HD for Ground Range detected, SLC for complex and polSAR images.
 processingLevel	GRD_HD
+
+# Amount of simultaneous downloads. 8 is good.
 processes	8
 
 
 
 ### PROCESSING PARAMETERS ###
+
+# You can use one of three preset processing pipelines: GRD, SLC, polSAR.
+# Alternatively, you can set it at False, and define the processing parameters yourself.
+# If you're not sure what yor identifier column is, just run the process with some name, and the columns will be printed.
+
+process	GRD
+identifierColumn	PLOHKO
+
+#########
+
 # NOTE: slcSplit and slcDeburst only apply for SLC images.
-# Usual processing pipelines:
+# Example processing pipelines:
 # GRD: applyOrbitFile, thermalNoiseRemoval, calibration, speckleFiltering, terrainCorrection, linearToDb.
 # SLC: slcSplit, applyOrbitFile, calibration, slcDeburst, speckleFiltering, terrainCorrection.
 
-slcSplit	False
+slcSplit	True
 applyOrbitFile	True
-thermalNoiseRemoval	True
+thermalNoiseRemoval	False
 calibration	True
+complexOutput	True
 slcDeburst	False
-speckleFiltering	True
-filterResolution	3
-terrainCorrection	True
+speckleFiltering	False
+polarimetricSpeckleFiltering	False
+filterResolution	5
+polarimetricParameters	True
+terrainCorrection	False
 terrainResolution	10.0
 bandMaths	False
 bandMathsExpression	Sigma0_VV_db + 0.002
-linearToDb	True
+linearToDb	False
+
+#########
 
 
-
-
-### POST-PROCESSING PARAMETERS
+### POST-PROCESSING PARAMETERS ###
 timeseries	True
+
 movingAverage	False
 movingAverageWindow	2
-reflector       False
+
+# If reflector is enabled, the code finds a brightest spot in the image and calculates timeseries on that one spot.
+reflector	False
+downloadWeather	False
 
 ```
 
-Then the next step is to modify the _run_batch.sh_ parameters to match the output folder, processing duration, etc. (first rows):
+Then, navigate to `sarp/SARP/` and call the script from CLI:
 
-```#!/bin/bash -l
-#SBATCH --account=project_2001106
-#SBATCH --job-name=example_job
-#SBATCH --partition=small
-#SBATCH --mem=30G
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=6
-#SBATCH --time=6:00:00
-#SBATCH --gres=nvme:20
-#SBATCH --output=/scratch/project_2001106/lake_timeseries/example/SLURM/%A_%a.out
-#SBATCH --error=/scratch/project_2001106/lake_timeseries/example/Error/%A_%a_ERROR.out
-#SBATCH --mail-type=FAIL,END
-```
-
-After that, navigate to _sarp_ folder, and run from CLI:
-
-``` bash run_interactive.sh -s /scratch/project_2001106/lake_timeseries/shapefile/example_shapefile.shp /scratc/project_2001106/lake_timeseries/example/ -b -p ```
+`bash run_interactive.sh -s /path/to/shapefile/folder/example_target.gpkg -r /path/to/results/folder/example -b -p `
 
 After this the script will run uninterrupted:
 
 ```
+Bulk download: true, Separate polygons: true
+------------------------------------------
+Geoconda 3.10.9, GIS libraries for Python
+https://docs.csc.fi/apps/geoconda
+------------------------------------------
 Ensuring all external packages are installed...
 All good!
 
@@ -153,11 +169,13 @@ DEM saved.
 Downloading orbit files...
 Orbit files sorted and moved to their respective directories.
 
-Sending to process: S1A_IW_SLC__1SDV_20210602T153342_20210602T153409_038163_04810F_3B7D.SAFE
+Sending to process: S1A_IW_GRDH_1SDV_20210105T160601_20210105T160626_036005_0437E2_A884.SAFE
+
         Applying orbit file...
 
 100% done.
         Thermal noise removal...
+
 100% done.
         Calibration...
 
@@ -168,32 +186,60 @@ Sending to process: S1A_IW_SLC__1SDV_20210602T153342_20210602T153409_038163_0481
         Terrain correction...
 
 100% done.
+        To dB...
+
+100% done.
         Subsetting...
 
 100% done.
 Writing...
 Processing done.
 
-ID: 332782
-File parsing completed.
+ID: 0040110914
 Masking done.
-Statistics completed.
-Fetching meteorological data...
-07.06.2021 (6/6) processed.
-All meteorological data processed.
-Plots created, analysis done.
+Databases created and data saved.
+Timeseries done.
 
-ID: 332890
-File parsing completed.
+ID: 0040210843
 Masking done.
-Statistics completed.
-Fetching meteorological data...
-07.06.2021 (6/6) processed.
-All meteorological data processed.
-Plots created, analysis done.
+Data appended to databases.
+Timeseries done.
+
+ID: 0040424546
+Masking done.
+Data appended to databases.
+Timeseries done.
+
+ID: 0040424647
+Masking done.
+Data appended to databases.
+Timeseries done.
+
+ID: 0040658154
+Masking done.
+Data appended to databases.
+Timeseries done.
+
+ID: 0040762026
+Masking done.
+Data appended to databases.
+Timeseries done.
+
+ID: 0040782032
+Masking done.
+Data appended to databases.
+Timeseries done.
+
+ID: 0040827704
+Masking done.
+Data appended to databases.
+Timeseries done.
+
+Script execution time: 117 seconds
+
 ```
-... and so forth for all of the polygons.
-### Example 2: SLC processing
+
+### Example 2: Batch SLC processing
     
 Argument file:
 
