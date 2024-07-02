@@ -5,40 +5,61 @@ This package is an automated Sentinel-1 SAR image download, process, and analysi
 
 This program can download and process both Ground Range Detected (GRD) and Single-look Complex (SLC) images. Additionally, polSAR image processing is possible as well.
 
+Processing times are roughly:
+- Download GRD_HD, per 8 images: 
+- Download SLC, per 8 images:
+- Processing GRD_HD, per image:
+- Processing SLC, per image:
+- Timeseries, per target: A few seconds.
+
 ## Dependencies
 This program is configured for CSC's Puhti environment. As such, it uses modules _geoconda_ and _snap_, along with a few external packages that are installed locally. The packages are:
 
--
--
--
--
+- fmiopendata
+- asf_search
+- download_eofs
+- 
 -
 
 
 
 ## Workflow
 
-### Input:
-- Path to a shapefile containing polygon(s), or a csv or coordinates in espg:3067. This shapefile is then parsed into individual polygons, and all available images are downloaded for the overall area for the given plot. For coordinates, a small buffer is created.
-- Result path: Full path to folder which is to be created and where results are stored.
-- Arguments (.txt): AS file specifying download and processing parameters. For more detailed explanation on download parameters, see: https://docs.asf.alaska.edu/api/keywords/ and https://docs.asf.alaska.edu/asf_search/ASFSearchOptions/.
+### 1. Clone repository
+Use `git clone https://gitlab.com/fgi_nls/kauko/chade/sarp.git` to clone the repository to a destination of your liking.
 
-### Run:
-The basic command is: 
+### 2. Set up input shapefile
+You can use `example_target.shp` to try out the script, or use your own target.
+
+### 3. Configure arguments
+In `arguments.txt`,set up your preferred arguments. It is good to start with a short timeframe, e.g. 10 days and `GRD_HD` processing processingLevel and GRD as `process``, to configure the packages. See the file for more descriptions on the parameters. 
+
+### 4. Run:
+To run, you need to navigate to /sarp/SARP/. The basic command is: 
 
 ```<run type> <script name> -s <source file> -r <result folder> -b (bulk download) -p (parse input file) ```
 
 Source file path and results folder path are mandatory. Optional commands include:
-- Bulk download -b: Whether images are downloaded only once. This is useful if the shapefile targets are located close to one another, a thus likely within one approx. 200kmx200km SAR image. If not enabled, each object is downloaded separately.
-- Parse shapefile -p: Whether polygons in the shapefile are separated to individual objects. If enabled, masking and timeseries is done to the entire shapefile.
+- Bulk download `-b`: Whether images are downloaded only once. This is useful if the shapefile targets are located close to one another, a thus likely within one approx. 200kmx200km SAR image. If not enabled, each object is downloaded separately.
+- Parse shapefile `-p`: Whether polygons in the shapefile are separated to individual objects. If enabled, masking and timeseries is done to the entire shapefile.
+
+**Interactive**
+Before running the script in interactive, start a new job by `sinteractive -i`, and set up your parameters. The script is partly parallelized, so several cores is recommended, and at least 12GB of memory.
 
 Example for running interactive: 
+`bash run_interactive.sh -s /path/to/shapefile/folder/ /path/to/results/folder/ -b -p `
 
-``` bash run_interactive.sh -s /path/to/shapefile/folder/ /path/to/results/folder/ -b -p ```
 
-For batch:
+**Batch**
+`sbatch run_batch.sh /path/to/shapefile/folder/ /path/to/results/folder/ `
 
-``` sbatch run_batch.sh /path/to/shapefile/folder/ /path/to/results/folder/ ```
+If you run the script in batch process mode, remember to set up the batch process paramters in `run_batch.sh`. It is recommended to first run it in interactive to ensure that all works.
+
+
+### Input:
+- Path to a shapefile containing polygon(s), or a csv or coordinates in espg:3067. This shapefile is then parsed into individual polygons, and all available images are downloaded for the overall area for the given plot. For coordinates, a small buffer is created.
+- Result path: Full path to folder which is to be created and where results are stored.
+- Arguments (.txt): AS file specifying download and processing parameters. For more detailed explanation on download parameters, see: https://docs.asf.alaska.edu/api/keywords/ and https://docs.asf.alaska.edu/asf_search/ASFSearchOptions/.
 
 ### Process:
 0. download_packages.py: Downloads all packages that are not native to _geoconda_. For SNAP, additional downloading will be done later. If the process fails on first try, run it again after the packages have been downloaded.
