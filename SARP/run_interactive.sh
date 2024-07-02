@@ -41,7 +41,6 @@ echo "Bulk download: $bulk_download, Separate polygons: $separate"
 
 # Set the path to the folder containing the scripts
 script_folder=$(dirname "$0")
-
 module load geoconda
 python download_packages.py
 
@@ -83,7 +82,7 @@ if [ "$bulk_download" = true ]; then
         echo "ID: $id"
 
         # Create timeseries of each target
-        python timeseries.py "$source_path" "$data_path" "$bulk_download" "$id"
+        python timeseries_new.py "$source_path" "$data_path" "$bulk_download" "$id"
 
     done    
     
