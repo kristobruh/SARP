@@ -1,26 +1,6 @@
 '''
-This script does all the actual processing, and is run by calling it from the parent script (iterate_sar.py). Running it standalone won't work.
-
-The general processing pipeline is:
-0.5. Extract relevant arguments from the text file and sent by the parent script
-If two images need to be combined:
-    1.1 Remove thermal noise from both
-    1.2 Assemble the slices to one image
-Else:
-    1. Remove thermal noise from just one image
-2. Calibrate to get VH and VV values
-3. Speckle filter to desired filter (NOTE: if changed, some parameters will be needed to be added and removed)
-4. Terrain correct
-5. Convert to dB
-6. Subset to the boundaries defined by the shapefile
-7. Calculate band maths for some indicator value
-8. Combine the VV+VH and band maths bands
-9. Write to a GeoTIFF file.
-
+This script does all the actual processing, and is run by calling it from the parent script (process_images.py). Running it standalone won't work.
 Running this processing takes a considerable amount of memory, and that is why it is called separately each time in order to force clean the temp memory between processes.
-
-There are some functions which are not used in this particular process, but I kept them for possible future use.
-
 '''
 
 import os, gc, subprocess, sys, argparse, csv
