@@ -12,13 +12,6 @@ The outputs of this program are:
 - Shapefiles of the targets
 - A 2m DEM and shapefile(s) of the target area(s)
 
-Processing times are roughly:
-- Download GRD_HD, per 8 images: 
-- Download SLC, per 8 images:
-- Processing GRD_HD, per image:
-- Processing SLC, per image:
-- Timeseries, per target: A few seconds.
-
 ## Dependencies
 This program is configured for CSC's Puhti environment. As such, it uses modules _geoconda_ and _snap_, along with a few external packages that are installed locally. The packages are:
 
@@ -366,6 +359,35 @@ Script execution time: 539 seconds
 - Path to a shapefile containing polygon(s), or a csv or coordinates in espg:3067. This shapefile is then parsed into individual polygons, and all available images are downloaded for the overall area for the given plot. For coordinates, a small buffer is created.
 - Result path: Full path to folder which is to be created and where results are stored.
 - Arguments (.txt): AS file specifying download and processing parameters. For more detailed explanation on download parameters, see: https://docs.asf.alaska.edu/api/keywords/ and https://docs.asf.alaska.edu/asf_search/ASFSearchOptions/.
+
+
+## Efficiency
+Processing times are roughly (in interactive mode):
+**polSAR SLC, 1 image**
+
+Download time: 220 seconds
+Image process execution time: 36 seconds
+Script execution time: 298 seconds
+
+**polSAR SLC, 4 images (4 cores):**
+
+Download execution time: 412 seconds
+Image process execution time: 113 seconds
+Script execution time: 571 seconds
+
+
+**GRD, 1 image:**
+
+Download execution time: 64 seconds
+Image process execution time: 17 seconds
+Script execution time: 120 seconds
+
+
+**GRD, 4 images (4 cores):**
+
+Download execution time: 75 seconds
+Image process execution time: 51 seconds
+Script execution time: 169 seconds
 
 
 ## Authors and acknowledgment
