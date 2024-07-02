@@ -32,7 +32,7 @@ Use `git clone https://gitlab.com/fgi_nls/kauko/chade/sarp.git` to clone the rep
 You can use `example_target.gpkg` to try out the script, or use your own target.
 
 ### 3. Configure arguments
-In `arguments.txt`,set up your preferred arguments. It is good to start with a short timeframe, e.g. 10 days and `GRD_HD` processing processingLevel and GRD as `process``, to configure the packages. See the file for more descriptions on the parameters. 
+In `arguments.txt`,set up your preferred arguments. It is good to start with a short timeframe, e.g. 10 days and `GRD_HD` processing processingLevel and GRD as `process``, to configure the packages. See the file for more descriptions on the parameters. Note: If you use a predefined process, there is no need to define the individual parameters separately. 
 
 ### 4. Run:
 To run, you need to navigate to /sarp/SARP/. The basic command is: 
