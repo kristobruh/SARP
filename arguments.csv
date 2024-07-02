@@ -17,7 +17,7 @@ flightDirection	ASCENDING
 polarization	VV,VV+VH
 
 # GRD_HD for Ground Range detected, SLC for complex and polSAR images.
-processingLevel	SLC
+processingLevel	GRD_HD
 
 # Amount of simultaneous downloads. 8 is good.
 processes	8
@@ -28,9 +28,12 @@ processes	8
 
 # You can use one of three preset processing pipelines: GRD, SLC, polSAR.
 # Alternatively, you can set it at False, and define the processing parameters yourself.
+# If you're not sure what yor identifier column is, just run the process with some name, and the columns will be printed.
 
-process	polSAR
+process	GRD
+identifierColumn	PLOHKO
 
+#########
 
 # NOTE: slcSplit and slcDeburst only apply for SLC images.
 # Example processing pipelines:
@@ -38,36 +41,26 @@ process	polSAR
 # SLC: slcSplit, applyOrbitFile, calibration, slcDeburst, speckleFiltering, terrainCorrection.
 
 slcSplit	True
-
 applyOrbitFile	True
-
 thermalNoiseRemoval	False
-
 calibration	True
 complexOutput	True
-
 slcDeburst	False
-
 speckleFiltering	False
 polarimetricSpeckleFiltering	False
 filterResolution	5
-
 polarimetricParameters	True
-
 terrainCorrection	False
 terrainResolution	10.0
-
 bandMaths	False
 bandMathsExpression	Sigma0_VV_db + 0.002
-
 linearToDb	False
 
-
+#########
 
 
 ### POST-PROCESSING PARAMETERS ###
-# Timeseries analysis is currently not supported on SLC.
-timeseries	False
+timeseries	True
 
 movingAverage	False
 movingAverageWindow	2
