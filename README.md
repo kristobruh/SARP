@@ -29,7 +29,7 @@ This program is configured for CSC's Puhti environment. As such, it uses modules
 Use `git clone https://gitlab.com/fgi_nls/kauko/chade/sarp.git` to clone the repository to a destination of your liking.
 
 ### 2. Set up input shapefile
-You can use `example_target.shp` to try out the script, or use your own target.
+You can use `example_target.gpkg` to try out the script, or use your own target.
 
 ### 3. Configure arguments
 In `arguments.txt`,set up your preferred arguments. It is good to start with a short timeframe, e.g. 10 days and `GRD_HD` processing processingLevel and GRD as `process``, to configure the packages. See the file for more descriptions on the parameters. 
@@ -44,11 +44,13 @@ Source file path and results folder path are mandatory. Optional commands includ
 - Parse shapefile `-p`: Whether polygons in the shapefile are separated to individual objects. If enabled, masking and timeseries is done to the entire shapefile.
 
 **Interactive**
+
 Before running the script in interactive, start a new job by `sinteractive -i`, and set up your parameters. The script is partly parallelized, so several cores is recommended, and at least 12GB of memory.
 
 Example for running interactive: 
 
 `bash run_interactive.sh -s /path/to/shapefile/folder/ /path/to/results/folder/ -b -p `
+
 
 
 **Batch**
@@ -58,29 +60,11 @@ Example for running interactive:
 If you run the script in batch process mode, remember to set up the batch process paramters in `run_batch.sh`. It is recommended to first run it in interactive to ensure that all works.
 
 
-### Input:
-- Path to a shapefile containing polygon(s), or a csv or coordinates in espg:3067. This shapefile is then parsed into individual polygons, and all available images are downloaded for the overall area for the given plot. For coordinates, a small buffer is created.
-- Result path: Full path to folder which is to be created and where results are stored.
-- Arguments (.txt): AS file specifying download and processing parameters. For more detailed explanation on download parameters, see: https://docs.asf.alaska.edu/api/keywords/ and https://docs.asf.alaska.edu/asf_search/ASFSearchOptions/.
-
-### Process:
-0. download_packages.py: Downloads all packages that are not native to _geoconda_. For SNAP, additional downloading will be done later. If the process fails on first try, run it again after the packages have been downloaded.
-1. run_(interactive/batch).sh: Dictates the script structure and loads necessary modules.
-2. initialize.py: Creates folder structure, parses shapefile or coodinate csv file.
-3. download_from_asf.py: Downloads images as defined by arguments.txt from Alaska Satellite Facility (ASF). Requires a verified (but free) account.
-It might take some time for the account to start working.
-4. create_dem.py: Downloads dem from NLS virtual raster. If using other than NLS environment, you might need to modify the code by uncommenting this script and adding your own dem to the results folder.
-5. s1_orbit_download: Downloads and redistributes orbit files for all downloaded files, which will be used if applyOrbitFile is enabled.
-6. iterate_sar.py: Runs through each downloaded image, and if they fit the polygon, it is saved.
-7. SarPipeline.py: Does the actual processing of the images, called by iterate_sar.py
-8. timeseries.py: Some analytics of each polygon.
-
-
 ## Examples
 
 ### Example 1: GND processing with timeseries
 
-First you should modify the _argument.txt_ file to match with your desired download parameters and output:
+First you should modify the `argument.txt` file to match with your desired download parameters and output:
 
 ```### DOWNLOAD PARAMETERS ###
 # Add the full path to your ASF credentials file. The file should be a .txt with one row, with structure : username<tab>password .
@@ -258,12 +242,31 @@ movingAverageWindow	2
 
 ```
 
+
+### Input:
+- Path to a shapefile containing polygon(s), or a csv or coordinates in espg:3067. This shapefile is then parsed into individual polygons, and all available images are downloaded for the overall area for the given plot. For coordinates, a small buffer is created.
+- Result path: Full path to folder which is to be created and where results are stored.
+- Arguments (.txt): AS file specifying download and processing parameters. For more detailed explanation on download parameters, see: https://docs.asf.alaska.edu/api/keywords/ and https://docs.asf.alaska.edu/asf_search/ASFSearchOptions/.
+
+### Process:
+0. download_packages.py: Downloads all packages that are not native to _geoconda_. For SNAP, additional downloading will be done later. If the process fails on first try, run it again after the packages have been downloaded.
+1. run_(interactive/batch).sh: Dictates the script structure and loads necessary modules.
+2. initialize.py: Creates folder structure, parses shapefile or coodinate csv file.
+3. download_from_asf.py: Downloads images as defined by arguments.txt from Alaska Satellite Facility (ASF). Requires a verified (but free) account.
+It might take some time for the account to start working.
+4. create_dem.py: Downloads dem from NLS virtual raster. If using other than NLS environment, you might need to modify the code by uncommenting this script and adding your own dem to the results folder.
+5. s1_orbit_download: Downloads and redistributes orbit files for all downloaded files, which will be used if applyOrbitFile is enabled.
+6. iterate_sar.py: Runs through each downloaded image, and if they fit the polygon, it is saved.
+7. SarPipeline.py: Does the actual processing of the images, called by iterate_sar.py
+8. timeseries.py: Some analytics of each polygon.
+
+
 ## Authors and acknowledgment
 Kristofer Mäkinen
 
 kristofer.makinen@maanmittauslaitos.fi
 
-When oublishing, additional credit should be given to the creators of asf_search and download_eofs.
+When publishing, additional credit should be given to the creators of asf_search and download_eofs.
 
 ## License
 CC 4.0
