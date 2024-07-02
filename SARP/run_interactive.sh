@@ -82,7 +82,7 @@ if [ "$bulk_download" = true ]; then
         echo "ID: $id"
 
         # Create timeseries of each target
-        python timeseries_new.py "$source_path" "$data_path" "$bulk_download" "$id"
+        python timeseries.py "$source_path" "$data_path" "$bulk_download" "$id"
 
     done    
     
