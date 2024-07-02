@@ -366,32 +366,32 @@ Processing times are roughly (in interactive mode):
 
 **polSAR SLC, 1 image**
 
-Download time: 220 seconds
-Image process execution time: 36 seconds
-Script execution time: 298 seconds
+- Download time: 220 seconds
+- Image process execution time: 36 seconds
+- Script execution time: 298 seconds
 
 
 **polSAR SLC, 4 images (4 cores):**
 
-Download execution time: 412 seconds
-Image process execution time: 113 seconds
-Script execution time: 571 seconds
+- Download execution time: 412 seconds
+- Image process execution time: 113 seconds
+- Script execution time: 571 seconds
 
 
 
 **GRD, 1 image:**
 
-Download execution time: 64 seconds
-Image process execution time: 17 seconds
-Script execution time: 120 seconds
+- Download execution time: 64 seconds
+- Image process execution time: 17 seconds
+- Script execution time: 120 seconds
 
 
 
 **GRD, 4 images (4 cores):**
 
-Download execution time: 75 seconds
-Image process execution time: 51 seconds
-Script execution time: 169 seconds
+- Download execution time: 75 seconds
+- Image process execution time: 51 seconds
+- Script execution time: 169 seconds
 
 
 ## Authors and acknowledgment
