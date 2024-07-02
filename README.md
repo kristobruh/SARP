@@ -363,11 +363,13 @@ Script execution time: 539 seconds
 
 ## Efficiency
 Processing times are roughly (in interactive mode):
+
 **polSAR SLC, 1 image**
 
 Download time: 220 seconds
 Image process execution time: 36 seconds
 Script execution time: 298 seconds
+
 
 **polSAR SLC, 4 images (4 cores):**
 
@@ -376,11 +378,13 @@ Image process execution time: 113 seconds
 Script execution time: 571 seconds
 
 
+
 **GRD, 1 image:**
 
 Download execution time: 64 seconds
 Image process execution time: 17 seconds
 Script execution time: 120 seconds
+
 
 
 **GRD, 4 images (4 cores):**
