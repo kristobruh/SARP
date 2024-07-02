@@ -29,10 +29,12 @@ This program is configured for CSC's Puhti environment. As such, it uses modules
 Use `git clone https://gitlab.com/fgi_nls/kauko/chade/sarp.git` to clone the repository to a destination of your liking.
 
 ### 2. Set up input shapefile
-You can use `example_target.gpkg` to try out the script, or use your own target.
+You can use `example_target.gpkg` to try out the script, or use your own target. .shp files, as well as coordinate csv's, are accepted as well.
 
 ### 3. Configure arguments
 In `arguments.txt`,set up your preferred arguments. It is good to start with a short timeframe, e.g. 10 days and `GRD_HD` processing processingLevel and GRD as `process``, to configure the packages. See the file for more descriptions on the parameters. Note: If you use a predefined process, there is no need to define the individual parameters separately. 
+
+For more detailed explanation on download parameters, see: https://docs.asf.alaska.edu/api/keywords/ and https://docs.asf.alaska.edu/asf_search/ASFSearchOptions/.
 
 ### 4. Run:
 To run, you need to navigate to /sarp/SARP/. The basic command is: 
@@ -352,13 +354,6 @@ Timeseries done.
 Script execution time: 539 seconds
 
 ```
-
-
-
-### Input:
-- Path to a shapefile containing polygon(s), or a csv or coordinates in espg:3067. This shapefile is then parsed into individual polygons, and all available images are downloaded for the overall area for the given plot. For coordinates, a small buffer is created.
-- Result path: Full path to folder which is to be created and where results are stored.
-- Arguments (.txt): AS file specifying download and processing parameters. For more detailed explanation on download parameters, see: https://docs.asf.alaska.edu/api/keywords/ and https://docs.asf.alaska.edu/asf_search/ASFSearchOptions/.
 
 
 ## Efficiency
