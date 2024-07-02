@@ -3,7 +3,14 @@
 ## Description
 This package is an automated Sentinel-1 SAR image download, process, and analysis pipeline for SAR images in Finland. The package is run from the command line interface of Puhti, either in interactive or batch mode. Running locally works as well, but then you need to ensure that you have all the packages installed, and modify the bash script by removing module calls.
 
-This program can download and process both Ground Range Detected (GRD) and Single-look Complex (SLC) images. Additionally, polSAR image processing is possible as well.
+This program can download and process both Ground Range Detected (GRD) and Single-look Complex (SLC) images. Additionally, polSAR image processing is possible.
+
+**The outputs ** of this program are:
+- Processed, masked SAR images for the entire target (if -b is enabled) and/or for each polygon separately (if -p is enabled)
+- A .csv file of all bands' mean values, for each target polygon as well as all targets in one .csv. For GRD, min, max, and std values are saved as well.
+- An SQL database of all target's band values, along with ID, orbit, processingLevel, look direction, and pixel count info.
+- Shapefiles of the targets
+- A 2m DEM and shapefile(s) of the target area(s)
 
 Processing times are roughly:
 - Download GRD_HD, per 8 images: 
@@ -147,10 +154,7 @@ After this the script will run uninterrupted:
 
 ```
 Bulk download: true, Separate polygons: true
-------------------------------------------
-Geoconda 3.10.9, GIS libraries for Python
-https://docs.csc.fi/apps/geoconda
-------------------------------------------
+
 Ensuring all external packages are installed...
 All good!
 
@@ -239,54 +243,34 @@ Script execution time: 117 seconds
 
 ```
 
-### Example 2: Batch SLC processing
+### Example 2: Batch polSAR processing
+
+This example has the same argument file, except for `processingLevel` and `process` as `SLC` and `polSAR`, respectively.  
     
-Argument file:
+In `run_batch.sh`, these parameters are set up:
 
-```### DOWNLOAD PARAMETERS ###
-# Add the full path to your ASF credentials file. The file should be a .txt with one row, with structure : username<tab>password .
-pathToClient	/users/kristofe/access/asf_client.txt
-start	2021-06-01
-end	2021-06-05
-# Preferred season, eg: 15,200. If not desired, set to none.
-season	none
-beamMode	IW
-flightDirection	ASCENDING
-polarization	VV,VV+VH
-# SLC for complex images, or GRD_HD for ground range detected images.
-processingLevel	SLC
-processes	8
-
-
-
-### PROCESSING PARAMETERS ###
-# NOTE: slcSplit and slcDeburst only apply for SLC images.
-# Usual processing pipelines:
-# GRD: applyOrbitFile, thermalNoiseRemoval, calibration, speckleFiltering, terrainCorrection, linearToDb.
-# SLC: slcSplit, applyOrbitFile, calibration, slcDeburst, speckleFiltering, terrainCorrection.
-
-slcSplit	True
-applyOrbitFile	True
-thermalNoiseRemoval	False
-calibration	True
-slcDeburst	True
-speckleFiltering	True
-filterResolution	3
-terrainCorrection	True
-terrainResolution	10.0
-bandMaths	False
-bandMathsExpression	Sigma0_VV_db + 0.002
-linearToDb	False
-
-
-
-
-### POST-PROCESSING PARAMETERS
-timeseries	False
-movingAverage	False
-movingAverageWindow	2
 
 ```
+#!/bin/bash -l
+#SBATCH --account=project_2001106
+#SBATCH --job-name=test_job
+#SBATCH --partition=small
+#SBATCH --mem=30G
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=6
+#SBATCH --time=0:30:00
+#SBATCH --gres=nvme:20
+#SBATCH --output=/scratch/project_2001106/lake_timeseries/test/SLURM/%A_%a.out
+#SBATCH --error=/scratch/project_2001106/lake_timeseries/test/Error/%A_%a_ERROR.out
+#SBATCH --mail-type=FAIL,END
+```
+
+After submitting this, this is printed out in `/SLURM/%A_%a.out`:
+
+```
+
+```
+
 
 
 ### Input:
