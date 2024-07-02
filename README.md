@@ -5,7 +5,8 @@ This package is an automated Sentinel-1 SAR image download, process, and analysi
 
 This program can download and process both Ground Range Detected (GRD) and Single-look Complex (SLC) images. Additionally, polSAR image processing is possible.
 
-**The outputs ** of this program are:
+**The outputs ** 
+of this program are:
 - Processed, masked SAR images for the entire target (if -b is enabled) and/or for each polygon separately (if -p is enabled)
 - A .csv file of all bands' mean values, for each target polygon as well as all targets in one .csv. For GRD, min, max, and std values are saved as well.
 - An SQL database of all target's band values, along with ID, orbit, processingLevel, look direction, and pixel count info.
