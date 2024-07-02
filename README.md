@@ -5,8 +5,7 @@ This package is an automated Sentinel-1 SAR image download, process, and analysi
 
 This program can download and process both Ground Range Detected (GRD) and Single-look Complex (SLC) images. Additionally, polSAR image processing is possible.
 
-**The outputs **
-of this program are:
+The outputs of this program are:
 - Processed, masked SAR images for the entire target (if -b is enabled) and/or for each polygon separately (if -p is enabled)
 - A .csv file of all bands' mean values, for each target polygon as well as all targets in one .csv. For GRD, min, max, and std values are saved as well.
 - An SQL database of all target's band values, along with ID, orbit, processingLevel, look direction, and pixel count info.
@@ -269,6 +268,95 @@ In `run_batch.sh`, these parameters are set up:
 After submitting this, this is printed out in `/SLURM/%A_%a.out`:
 
 ```
+Bulk download: true, Separate polygons: true
+Shapefile processing complete. 
+
+Authenticating...
+Searching for results...
+Downloading 1 images...
+Download complete.
+Unzipping...
+Unzip done. 
+
+Writing DEM...
+DEM saved. 
+
+Downloading orbit files...
+Orbit files sorted and moved to their respective directories. 
+
+SNAP user directory set to /scratch/project_2001106/lake_timeseries/test//snap_cache
+
+100% done.
+
+100% done.
+
+100% done.
+
+100% done.
+
+100% done.
+
+100% done.
+
+100% done.
+
+100% done.
+
+100% done.
+	Applying orbit file...
+	Calibration...
+	Debursting SLC...
+	Polarimetric spekle filtering...
+	Calculating entropy, anisotropy, and alpha...
+	Calculating Stokes parameters...
+	Stacking polSAR parameters...
+	Terrain correction...
+	Subsetting...
+Writing...
+Processing done. 
+
+Sending to process: S1A_IW_SLC__1SDV_20210105T160559_20210105T160626_036005_0437E2_C385.SAFE
+ID: 0040110914
+Masking done.
+Databases created and data saved.
+Timeseries done. 
+
+ID: 0040210843
+Masking done.
+Data appended to databases.
+Timeseries done. 
+
+ID: 0040424546
+Masking done.
+Data appended to databases.
+Timeseries done. 
+
+ID: 0040424647
+Masking done.
+Data appended to databases.
+Timeseries done. 
+
+ID: 0040658154
+Masking done.
+Data appended to databases.
+Timeseries done. 
+
+ID: 0040762026
+Masking done.
+Data appended to databases.
+Timeseries done. 
+
+ID: 0040782032
+Masking done.
+Data appended to databases.
+Timeseries done. 
+
+ID: 0040827704
+Masking done.
+Data appended to databases.
+Timeseries done. 
+
+Script execution time: 539 seconds
 
 ```
 
