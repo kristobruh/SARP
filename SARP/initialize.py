@@ -3,7 +3,7 @@ from datetime import datetime
 import geopandas as gpd
 from shapely.geometry import Point
 
-def process_shapefiles(source_path, result_path, separate=False, bulkDownload=False):
+def process_shapefiles(source_path, result_path, identifierColumn, separate=False, bulkDownload=False):
     '''
     Read shapefile and organize them to correct folders. Optionally parse the shapefile to individual polygons.
     
@@ -22,7 +22,13 @@ def process_shapefiles(source_path, result_path, separate=False, bulkDownload=Fa
     if separate:
         for index, row in gdf.iterrows():
             # Create folder name based on the 'id' column, might be needed to change based on shapefile attributes.
-            folder_name = str(row['id'])
+            try:
+                folder_name = str(row[identifierColumn])
+            except KeyError:
+                print(f"Error: Column identifier '{identifierColumn}' not found in the file. Possible identifier columns are: {list(gdf.columns)}.")
+                parent_pid = os.getppid()
+                os.kill(parent_pid, signal.SIGTERM)
+                sys.exit(1)
             folder_shapefile = os.path.join(result_path, folder_name, 'shapefile')
             os.makedirs(folder_shapefile, exist_ok=True)
 
@@ -339,13 +345,14 @@ def main():
     result_path = sys.argv[2]
     separate = sys.argv[3].lower() == 'true'
     bulkDownload = sys.argv[4].lower() == 'true'
+    identifierColumn = args.get('identifierColumn')
 
     # Process input
     if source_path.endswith('.csv'):
         process_coordinates(source_path, result_path, bulkDownload)
         print("Coordinate processing complete.")
     else:
-        process_shapefiles(source_path, result_path, separate, bulkDownload)
+        process_shapefiles(source_path, result_path, identifierColumn, separate, bulkDownload)
         print("Shapefile processing complete. \n")
     folder_slurm = os.path.join(result_path, 'SLURM')
     folder_error = os.path.join(result_path, 'Error')
