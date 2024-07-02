@@ -47,10 +47,12 @@ Source file path and results folder path are mandatory. Optional commands includ
 Before running the script in interactive, start a new job by `sinteractive -i`, and set up your parameters. The script is partly parallelized, so several cores is recommended, and at least 12GB of memory.
 
 Example for running interactive: 
+
 `bash run_interactive.sh -s /path/to/shapefile/folder/ /path/to/results/folder/ -b -p `
 
 
 **Batch**
+
 `sbatch run_batch.sh /path/to/shapefile/folder/ /path/to/results/folder/ `
 
 If you run the script in batch process mode, remember to set up the batch process paramters in `run_batch.sh`. It is recommended to first run it in interactive to ensure that all works.
