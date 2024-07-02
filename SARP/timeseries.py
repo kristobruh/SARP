@@ -13,6 +13,7 @@ import xarray as xr
 import datetime
 from scipy.stats import zscore
 import sqlite3
+import warnings
 
 try:
     from fmiopendata.wfs import download_stored_query
@@ -198,39 +199,38 @@ def mask_and_save_rasters(data_path, path_to_shapefile, output_folder):
             # Mask the raster with the shapefile
             out_image, out_transform = mask(src, shapefile.geometry, crop=True, nodata=np.nan)
             
-            # Create output filename
-            output_tiff_file = os.path.splitext(file)[0] + '_masked.tif'
-            output_path = os.path.join(output_folder, output_tiff_file)
-            
-           
             # ------- START FILTERING BAD IMAGES -------
-            vh_band = out_image[0]
-            vv_band = out_image[1]
+            # Pick one band for testing and see if the image is whole.
+            test_band = out_image[0]
 
-            vv_mean = np.nanmean(vv_band)
-            vh_mean = np.nanmean(vh_band)
-            std = np.nanstd(vv_band)
+            warnings.simplefilter('error', RuntimeWarning)
+            try:
+                total_pixels = test_band.size
 
-            # Count NaN values
-            nan_count = np.sum(np.isnan(vv_band))
-            total_pixels = vv_band.size
-            nan_percentage = nan_count / total_pixels
+                mean = np.nanmean(test_band)
 
-            # Count 0-values
-            zero_count = np.sum(vv_band == 0.0)
-            zero_percentage = zero_count / total_pixels
+                # Count NaN values
+                nan_count = np.sum(np.isnan(test_band))
+                nan_percentage = nan_count / total_pixels
 
-            # Count low values
-            low_count = np.sum(vv_band < -49)
-            low_percentage = low_count / total_pixels
+                # Count 0-values
+                zero_count = np.sum(test_band == 0.0)
+                zero_percentage = zero_count / total_pixels
 
-            # Check filtering criteria
-            if vv_mean == 0 or vh_mean == 0 or std > 15 or zero_percentage > 0.1 or low_percentage > 0.05:
-                continue  # Skip to the next raster file if any criterion is met
+                # Check filtering criteria
+                if mean == 0  or zero_percentage > 0.2:
+                    print(f'Skipping this. mean = {mean}, Zeros = {zero_percentage}')
+                    continue  # Skip to the next raster file if any criterion is met
+            except RuntimeWarning:
+                print('Empty raster.')
+                continue
                 
 
             # ------- END FILTERING BAD IMAGS -------
             else:
+                output_tiff_file = os.path.splitext(file)[0] + '_masked.tif'
+                output_path = os.path.join(output_folder, output_tiff_file)
+
                 # Write the masked raster to a new GeoTIFF file
                 with rasterio.open(
                     output_path,
@@ -1527,17 +1527,19 @@ def extract_intersected_data(netcdf_path, target_shapefile_path):
 
 
 
-def extract_SLC(path, masked_path):
+def save_to_SQL(path, masked_path, processingLevel):
     '''
-    Extracts the data from the masked rasters to a list of arrays.
+    Extracts the data from the masked rasters to a SQL database. 
+    The funcion works by looping through each tiff file, and then extracts metadata from filename, band names from band_names.csv, and finally calculates the statistical values from the bands.
+    If the database exists, new values are added it, and if not, the database is created.
     
     Inputs:
+    - path (str): Full path to the results folder.
     - masked_path (str): Full path to the folder where the masked rasters are.
+    - processingLevel (str): whether '*GRD' or 'SLC'. Determines whether min, max,std are calculated in addition to the mean.
     
     Output:
-    - VVs (list): A list containing all the VV raster arrays.
-    - VHs (list): A list containing all the VH raster arrays.
-    - dates (list): A list of dates corresponding to the arrays.
+    - SQL database, saved to the main results folder.
     '''
     # Get list of TIFF filenames
     tiff_files = [file for file in os.listdir(masked_path) if file.endswith('.tif')]
@@ -1548,10 +1550,7 @@ def extract_SLC(path, masked_path):
     with open(csv_file, mode='r') as file:
         reader = csv.reader(file)
         band_names = [row[0] for row in reader]
-
-    band_means = pd.DataFrame(columns=['id', 'date', 'orbit', 'product', 'direction', 'look', 'count'] + band_names)
-    
-    dfs = []
+    master_df = pd.DataFrame(columns=['id', 'date', 'orbit', 'product', 'direction', 'look', 'count'] + band_names)
 
     # Loop over each TIFF file
     for tiff_file in tiff_files:
@@ -1561,38 +1560,49 @@ def extract_SLC(path, masked_path):
         parts = tiff_file.split('_')
         date, product, direction, orbit, look, _, _ = parts
 
-        means_dict = {band_name: np.nan for band_name in band_names}
+        #values_dict = {band_name: np.nan for band_name in band_names}
+        values_dict = {}
         with rasterio.open(os.path.join(masked_path, tiff_file)) as src:
             # Loop over each band
             for i in range(1, src.count + 1):
                 band_data = src.read(i)
                 band_name = band_names[i - 1]
-                band_mean = float(np.nanmean(band_data))
-                means_dict[band_name] = band_mean
+                values_dict[band_name] = float(np.nanmean(band_data))
                 count = int(band_data.size)
+
+                if processingLevel.startswith('GRD'):
+                    values_dict[f'{band_name}_min'] = float(np.nanmin(band_data))
+                    values_dict[f'{band_name}_max'] = float(np.nanmax(band_data))
+                    values_dict[f'{band_name}_std'] = float(np.nanstd(band_data))
+
 
         row_dict = {'id': identifier, 'date': date, 'product': product, 'direction': direction, 'orbit': orbit, 'look': look, 'count': count}
         
         # Add band means to the row dictionary
-        row_dict.update(means_dict)
+        row_dict.update(values_dict)
         df = pd.DataFrame([row_dict])
-        band_means = pd.concat([band_means, df], ignore_index=True)
+        df.to_csv(f'{path}/{identifier}/{identifier}.csv', index=False)
 
-    print(band_means)         
+        master_df = pd.concat([master_df, df], ignore_index=True)
 
     # Save to SQL database
     db_path = os.path.join(path, 'SQL_database.db')
 
     if not os.path.exists(db_path):
         conn = sqlite3.connect(db_path)
-        band_means.to_sql('data', conn, index=False)
+        master_df.to_sql('data', conn, index=False)
         conn.close()
-        print(f"SQL database created and data saved.")
+        master_df.to_csv(f'{path}/csv_database.csv', index=False)
+        print(f"Databases created and data saved.")
     else:
         conn = sqlite3.connect(db_path)
-        band_means.to_sql('data', conn, if_exists='append', index=False)
+        master_df.to_sql('data', conn, if_exists='append', index=False)
         conn.close()
-        print(f"Data appended to SQL database.")
+
+        existing_df = pd.read_csv(f'{path}/csv_database.csv')
+        combined_df = pd.concat([existing_df, master_df], ignore_index=True)
+        combined_df.to_csv(f'{path}/csv_database.csv', index=False)
+        print(f"Data appended to databases.")
 
 
 def main():
@@ -1606,75 +1616,70 @@ def main():
     processingLevel = args.get('processingLevel')
     downloadWeather = args.get('downloadWeather') == 'True'
     
+
     if timeseries:
-        
-        if process == 'SLC':
-            print('Timeseries is not supported for simple SLC at this moment.')
-            sys.exit()
-           
+
+        source_path = sys.argv[1]
+        path = sys.argv[2]
+        bulkDownload = sys.argv[3].lower() == 'true'
+        identifier = sys.argv[4]
+
+        if not bulkDownload:
+            data_path = os.path.join(path,identifier,'tiffs')
         else:
-            source_path = sys.argv[1]
-            path = sys.argv[2]
-            bulkDownload = sys.argv[3].lower() == 'true'
-            identifier = sys.argv[4]
+            data_path = os.path.join(path,'tiffs')
 
-            if not bulkDownload:
-                data_path = os.path.join(path,identifier,'tiffs')
+        masked_path = os.path.join(path,identifier,'masked_tiffs')
+        path_to_shapefile = os.path.join(path, identifier, 'shapefile', f'{identifier}.shp')
+
+        df = parse_file_info(data_path)
+        print('File parsing completed.')
+
+        if movingAverage:
+            averaged_path = os.path.join(path,identifier,'averaged_tiffs')
+            calculate_average_raster(df, data_path, averaged_path, movingAverageWindow)
+            print('Averaging done.')
+
+        mask_and_save_rasters(data_path, path_to_shapefile, masked_path)
+        print('Masking done.')
+        gc.collect()
+        save_to_SQL(path, masked_path, processingLevel)
+
+
+
+
+        # TODO: FIX BELOW THIS TO MAKE IT MUCH MUCH SIMPLER!
+
+        # Save the bands as netCDF as well
+        #VV,VH, dates = extract_VV(masked_path)
+        #VV = resize_to_smallest(VV)
+        #VH = resize_to_smallest(VH)
+        #VV_xr = create_xarray(VV, dates, flip=True)
+        #VH_xr = create_xarray(VH, dates, flip=True)
+        #combined_xr = xr.combine_nested([VV_xr,VH_xr], concat_dim='band')
+        #combined_xr['band'] = ['VV', 'VH']
+        #combined_xr.to_netcdf(os.path.join(path,identifier,'VV_VH.nc'))
+
+        # Calculate statistics
+        #calculate_statistics(VV, VH, dates, path, identifier, df)
+        #print('Statistics completed.')
+
+
+        # Do reflector timeseries
+        if reflector:
+            upscale_factor = 10
+            VV_max, VH_max, VV_arr, max_indices, filtered_indices, position = find_reflector(data_path, upscale_factor)
+            make_location_fig(path,identifier,max_indices,filtered_indices,VV_arr,position)
+            VV,VH, dates = extract_VV_meteo(data_path, position, upscale_factor)
+
+        # Use either ready weather data, or download them again
+        if downloadWeather:
+            if bulkDownload:
+                temperature, snows, precipitation_amount, precipitation_intensity, meteo_dates = extract_intersected_data(os.path.join(path,'weather.nc'), path_to_shapefile)
             else:
-                data_path = os.path.join(path,'tiffs')
-
-            masked_path = os.path.join(path,identifier,'masked_tiffs')
-            path_to_shapefile = os.path.join(path, identifier, 'shapefile', f'{identifier}.shp')
-
-            if processingLevel == 'SLC':
-                mask_and_save_rasters(data_path, path_to_shapefile, masked_path)
-                print('Masking complete.')
-                extract_SLC(path, masked_path)
-
-            else:
-                df = parse_file_info(data_path)
-                print('File parsing completed.')
-
-                if movingAverage:
-                    averaged_path = os.path.join(path,identifier,'averaged_tiffs')
-                    calculate_average_raster(df, data_path, averaged_path, movingAverageWindow)
-                    print('Averaging done.')
-                    mask_and_save_rasters(averaged_path, path_to_shapefile, masked_path)
-                else:
-                    mask_and_save_rasters(data_path, path_to_shapefile, masked_path)
-                print('Masking done.')
-                gc.collect()
-
-                # Save the bands as netCDF as well
-                VV,VH, dates = extract_VV(masked_path)
-                VV = resize_to_smallest(VV)
-                VH = resize_to_smallest(VH)
-                VV_xr = create_xarray(VV, dates, flip=True)
-                VH_xr = create_xarray(VH, dates, flip=True)
-                combined_xr = xr.combine_nested([VV_xr,VH_xr], concat_dim='band')
-                combined_xr['band'] = ['VV', 'VH']
-                combined_xr.to_netcdf(os.path.join(path,identifier,'VV_VH.nc'))
-
-                # Calculate statistics
-                calculate_statistics(VV, VH, dates, path, identifier, df)
-                print('Statistics completed.')
-
-
-                # Do reflector timeseries
-                if reflector:
-                    upscale_factor = 10
-                    VV_max, VH_max, VV_arr, max_indices, filtered_indices, position = find_reflector(data_path, upscale_factor)
-                    make_location_fig(path,identifier,max_indices,filtered_indices,VV_arr,position)
-                    VV,VH, dates = extract_VV_meteo(data_path, position, upscale_factor)
-
-                # Use either ready weather data, or download them again
-                if downloadWeather:
-                    if bulkDownload:
-                        temperature, snows, precipitation_amount, precipitation_intensity, meteo_dates = extract_intersected_data(os.path.join(path,'weather.nc'), path_to_shapefile)
-                    else:
-                        temperature, snows, precipitation_amount,precipitation_intensity, meteo_dates = find_meteorological_data(data_path, path, identifier, path_to_shapefile)
-                    make_plot(path,identifier,temperature,precipitation_amount,snows,VV,VH,dates,meteo_dates, reflector)
-                print('Plots created, analysis done. \n')
+                temperature, snows, precipitation_amount,precipitation_intensity, meteo_dates = find_meteorological_data(data_path, path, identifier, path_to_shapefile)
+            make_plot(path,identifier,temperature,precipitation_amount,snows,VV,VH,dates,meteo_dates, reflector)
+        print('Plots created, analysis done. \n')
 
     else:
         print('Timeseries not done.')
