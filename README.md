@@ -18,12 +18,11 @@ This program is configured for CSC's Puhti environment. As such, it uses modules
 - fmiopendata
 - asf_search
 - download_eofs
-- 
--
-
 
 
 ## Workflow
+
+There are two options the program can be ran through: regular command line run, and snakemake. Regular CLI run is somewhat more straightforward, but is prone to errors caused by e.g. internet connection breakage, and is somewhat slower. Snakemake, on the other hand, offers complete parallellization and significantly higher processing speeds, which is useful in long timeseries. Additionally, snakemake creates 'checkpoints', which means that an error does not require restarting the entire process, and automatic retries attempt to complete the process. The setup is mostly the same, execpt for the last part.
 
 ### 1. Clone repository
 Use `git clone https://gitlab.com/fgi_nls/kauko/chade/sarp.git` to clone the repository to a destination of your liking.
@@ -36,7 +35,7 @@ In `arguments.txt`,set up your preferred arguments. It is good to start with a s
 
 For more detailed explanation on download parameters, see: https://docs.asf.alaska.edu/api/keywords/ and https://docs.asf.alaska.edu/asf_search/ASFSearchOptions/.
 
-### 4. Run:
+### 4a. Run using CLI:
 To run, you need to navigate to /sarp/SARP/. The basic command is: 
 
 ```<run type> <script name> -s <source file> -r <result folder> -b (bulk download) -p (parse input file) ```
@@ -61,6 +60,12 @@ Example for running interactive:
 
 If you run the script in batch process mode, remember to set up the batch process paramters in `run_batch.sh`. It is recommended to first run it in interactive to ensure that all works.
 
+
+### 4b. Run using Snakemake:
+Again, navigate to /sarp/SARP/. Set up the input parameters (source, target directory, bulk processing, separating) in config.yaml found in the folder. After that, in your CLI either write:
+`module load snakemake
+snakemake --cores 4 
+`
 
 ## Examples
 
