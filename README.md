@@ -68,6 +68,12 @@ Again, navigate to /sarp/SARP/. Set up the input parameters (source, target dire
 
 `snakemake --cores 4`
 
+for interactive process, or
+
+`sbatch run_batch_snakemake.sh`
+
+for batch processing. Just remember to configure that batch process file the same way as the regular batch process file.
+
 ## Examples
 
 ### Example 1: Interactive GND processing with timeseries
