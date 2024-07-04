@@ -63,7 +63,9 @@ If you run the script in batch process mode, remember to set up the batch proces
 
 ### 4b. Run using Snakemake:
 Again, navigate to /sarp/SARP/. Set up the input parameters (source, target directory, bulk processing, separating) in config.yaml found in the folder. After that, in your CLI either write:
+
 `module load snakemake
+
 snakemake --cores 4 
 `
 
