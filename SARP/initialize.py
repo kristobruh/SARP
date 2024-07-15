@@ -140,8 +140,6 @@ def check_processing_parameters():
     error = None
     args = read_arguments_from_file(os.path.join(os.path.dirname(os.getcwd()), 'arguments.csv'))
     
-    
-    
     # Check is client path exists
     pathToClient = args.get('pathToClient')
     if not os.path.isfile(pathToClient):

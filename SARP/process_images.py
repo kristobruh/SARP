@@ -22,7 +22,7 @@ NOTE: For now it has some hard-coded things specific to Finland, so refrain from
 
 '''
 
-import os,sys, subprocess, shutil, csv
+import os,sys, subprocess, shutil, csv, dask, time, datetime
 
 def read_arguments_from_file(file_path):
     '''
@@ -61,6 +61,7 @@ def process_sar_data(image1,image2, dataPath, pathToDem, pathToShapefile):
     
     # Run the command using subprocess
     subprocess.run(command)
+
 
 
 def main():
@@ -136,6 +137,7 @@ def main():
             shutil.rmtree(os.path.join(dataPath, filename1))
 
     # ------- END PROCESSING -------
+
 
 if __name__ == "__main__":
     main()

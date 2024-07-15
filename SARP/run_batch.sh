@@ -1,14 +1,14 @@
 #!/bin/bash -l
 #SBATCH --account=project_2001106
-#SBATCH --job-name=reflectors-missing
+#SBATCH --job-name=test_job
 #SBATCH --partition=small
 #SBATCH --mem=30G
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=6
-#SBATCH --time=6:00:00
+#SBATCH --time=0:30:00
 #SBATCH --gres=nvme:20
-#SBATCH --output=/scratch/project_2001106/S1_reflectors/test3/SLURM/%A_%a.out
-#SBATCH --error=/scratch/project_2001106/S1_reflectors/test3/Error/%A_%a_ERROR.out
+#SBATCH --output=/scratch/project_2001106/lake_timeseries/test/SLURM/%A_%a.out
+#SBATCH --error=/scratch/project_2001106/lake_timeseries/test/Error/%A_%a_ERROR.out
 #SBATCH --mail-type=FAIL,END
 
 # Start measuring time
@@ -67,17 +67,14 @@ if [ "$bulk_download" = true ]; then
     # Download orbit files
     python download_orbits.py "$data_path" "$bulk_download"
     
-    # Download weather data
-    python download_weather.py "$source_path" "$data_path"
-    
     # Process all images, subset to greatest extent
     module load snap
     source snap_add_userdir $data_path
-    python3 pocess_images.py "$source_path" "$data_path" "$bulk_download"
+    python3 process_images.py "$source_path" "$data_path" "$bulk_download"
     
     module load geoconda
     for folder_path in "$data_path"/*/; do
-        # Extract folder (lake_id) name
+        # Extract folder (id) name
         id=$(basename "$folder_path")
         if [ "$id" == "SLURM" ] || [ "$id" == "Error" ] || [ "$id" == "tiffs" ] || [ "$id" == "snap_cache" ]; then
             continue
@@ -98,15 +95,16 @@ else
             continue
         fi
         echo "ID: $id"
-        python download_from_asf.py "$source_path" "$data_path" "$bulk_download" "$id"
-        python create_dem.py "$source_path" "$data_path" "$bulk_download" "$id"
+        python download_images.py "$source_path" "$data_path" "$bulk_download" "$id"
+        python download_dem.py "$source_path" "$data_path" "$bulk_download" "$id"
         
         # Download orbit files
-        python S1_orbit_download.py "$data_path" "$bulk_download" "$id"  
+        python download_orbits.py "$data_path" "$bulk_download" "$id"
     
         module load snap
         source snap_add_userdir $data_path
-        python3 iterate_sar.py "$source_path" "$data_path" "$bulk_download" "$id"
+        python3 process_images.py "$source_path" "$data_path" "$bulk_download" "$id"
+        
         module load geoconda
         python timeseries.py "$source_path" "$data_path" "$bulk_download" "$id"
 

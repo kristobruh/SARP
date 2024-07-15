@@ -59,8 +59,10 @@ fi
 if [ "$bulk_download" = true ]; then
     
     # Download all files over target area
+    start_download=$(date +%s)
     python download_images.py "$source_path" "$data_path" "$bulk_download"
-    
+    end_download=$(date +%s)
+
     # Create DEM over the large area
     python download_dem.py "$source_path" "$data_path" "$bulk_download"
     
@@ -68,13 +70,16 @@ if [ "$bulk_download" = true ]; then
     python download_orbits.py "$data_path" "$bulk_download"
     
     # Process all images, subset to greatest extent
+    start_process=$(date +%s)
     module load snap
     source snap_add_userdir $data_path
     python3 process_images.py "$source_path" "$data_path" "$bulk_download"
+    end_process=$(date +%s)
+  
     
     module load geoconda
     for folder_path in "$data_path"/*/; do
-        # Extract folder (lake_id) name
+        # Extract folder (id) name
         id=$(basename "$folder_path")
         if [ "$id" == "SLURM" ] || [ "$id" == "Error" ] || [ "$id" == "tiffs" ] || [ "$id" == "snap_cache" ] || [ "$id" == "*" ]; then
             continue
@@ -83,8 +88,17 @@ if [ "$bulk_download" = true ]; then
 
         # Create timeseries of each target
         python timeseries.py "$source_path" "$data_path" "$bulk_download" "$id"
-
     done    
+
+    runtime=$((end_download-start_download))
+    echo "Download execution time: $runtime seconds"
+
+    runtime=$((end_process-start_process))
+    echo "Image process execution time: $runtime seconds"
+
+    end=$(date +%s)
+    runtime=$((end-start))
+    echo "Script execution time: $runtime seconds"
     
 
 else
@@ -109,10 +123,10 @@ else
         python timeseries.py "$source_path" "$data_path" "$bulk_download" "$id"
 
     done
+    end=$(date +%s)
+    runtime=$((end-start))
+    echo "Script execution time: $runtime seconds"
 fi
 
 
-# End measuring time
-end=$(date +%s)
-runtime=$((end-start))
-echo "Script execution time: $runtime seconds"
+

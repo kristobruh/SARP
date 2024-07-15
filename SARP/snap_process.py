@@ -3,7 +3,7 @@ This script does all the actual processing, and is run by calling it from the pa
 Running this processing takes a considerable amount of memory, and that is why it is called separately each time in order to force clean the temp memory between processes.
 '''
 
-import os, gc, subprocess, sys, argparse, csv
+import os, gc, subprocess, sys, argparse, csv, time
 from snappy import HashMap, GPF, ProductIO
 from snapista import Operator
 import jpy
@@ -668,12 +668,8 @@ def main():
     dataPath = args.pathToResult
     pathToDem = args.pathToDem
     outPath = dataPath
-    
-    
+
     # ---------END READ VARIABLES ----------
-    
-    
-    
     
     
     # --------START OF PROCESSING -----------
@@ -847,7 +843,7 @@ def main():
     print('Processing done. \n')
     gc.collect()
 
+    print(image1, image2)
     # -------- END OF PROCESSING ----------
-
 if __name__== "__main__":
     main()
