@@ -1,0 +1,178 @@
+# Snakefile
+
+configfile: "config.yaml"
+
+import yaml, os, pandas as pd
+
+with open("config.yaml", 'r') as stream:
+    try:
+        config = yaml.safe_load(stream)
+    except yaml.YAMLError as exc:
+        print(exc)
+
+# Function to aggregate benchmarks
+def aggregate_benchmarks(benchmark_dir, output_file):
+    benchmark_files = [os.path.join(benchmark_dir, f) for f in os.listdir(benchmark_dir) if 'benchmark' in f]
+    total_time = 0
+    details = []
+    all_data = []
+
+    for file in benchmark_files:
+        df = pd.read_csv(file, sep="\t")
+        rule_name = file.split("benchmark_")[1].split(".benchmark")[0]
+        df['benchmark_name'] = rule_name
+        all_data.append(df)
+        rule_time = df['s'].sum()  # Assuming 's' column contains seconds
+        total_time += rule_time
+        details.append(f"{rule_name}: {rule_time} seconds")
+
+    with open(output_file, "w") as f:
+        f.write("\n".join(details))
+        f.write(f"\nTotal time: {total_time} seconds\n")
+
+rule all:
+    input:
+        os.path.join(config["data_path"], "snake_log", "timeseries.txt"),
+        os.path.join(config["data_path"], "snake_log", "benchmark_summary.txt")
+
+rule initialize:
+    input:
+        "initialize.py"
+    output:
+        os.path.join(config["data_path"], "snake_log", "initialized.txt")
+    params:
+        source_path=config["source_path"],
+        data_path=config["data_path"],
+        separate=config["separate"],
+        bulk_download=config["bulk_download"]
+    benchmark:
+        os.path.join(config["data_path"], "snake_log", "benchmark_initialize.benchmark.txt")
+    shell:
+        """
+        module load geoconda
+        python {input} "{params.source_path}" "{params.data_path}" "{params.separate}" "{params.bulk_download}"
+        touch {output}
+        """
+
+rule download_images:
+    input:
+        "download_images.py",
+        os.path.join(config["data_path"], "snake_log", "initialized.txt")
+    output:
+        os.path.join(config["data_path"], "snake_log", "images_downloaded.txt")
+    retries: 3
+    params:
+        source_path=config["source_path"],
+        data_path=config["data_path"],
+        bulk_download=config["bulk_download"]
+    benchmark:
+        os.path.join(config["data_path"], "snake_log", "benchmark_download_images.benchmark.txt")
+    shell:
+        """
+        module load geoconda
+        python {input[0]} "{params.source_path}" "{params.data_path}" "{params.bulk_download}"
+        touch {output}
+        """
+
+rule download_dem:
+    input:
+        "download_dem.py",
+        os.path.join(config["data_path"], "snake_log", "initialized.txt")
+    output:
+        os.path.join(config["data_path"], "snake_log", "dem_downloaded.txt")
+    params:
+        source_path=config["source_path"],
+        data_path=config["data_path"],
+        bulk_download=config["bulk_download"]
+    benchmark:
+        os.path.join(config["data_path"], "snake_log", "benchmark_download_dem.benchmark.txt")
+    shell:
+        """
+        module load geoconda
+        python {input[0]} "{params.source_path}" "{params.data_path}" "{params.bulk_download}"
+        touch {output}
+        """
+
+rule download_orbits:
+    input:
+        "download_orbits.py",
+        os.path.join(config["data_path"], "snake_log", "initialized.txt"),
+        os.path.join(config["data_path"], "snake_log", "images_downloaded.txt")
+    output:
+        os.path.join(config["data_path"], "snake_log", "orbits_downloaded.txt")
+    retries: 3
+    params:
+        data_path=config["data_path"],
+        bulk_download=config["bulk_download"]
+    benchmark:
+        os.path.join(config["data_path"], "snake_log", "benchmark_download_orbits.benchmark.txt")
+    shell:
+        """
+        module load geoconda
+        python {input[0]} "{params.data_path}" "{params.bulk_download}"
+        touch {output}
+        """
+
+rule process_images:
+    input:
+        "process_images_snakemake.py",
+        os.path.join(config["data_path"], "snake_log", "initialized.txt"),
+        os.path.join(config["data_path"], "snake_log", "images_downloaded.txt"),
+        os.path.join(config["data_path"], "snake_log", "dem_downloaded.txt"),
+        os.path.join(config["data_path"], "snake_log", "orbits_downloaded.txt")
+    output:
+        os.path.join(config["data_path"], "snake_log", "images_processed.txt")
+    retries: 5
+    params:
+        source_path=config["source_path"],
+        data_path=config["data_path"],
+        bulk_download=config["bulk_download"]
+    benchmark:
+        os.path.join(config["data_path"], "snake_log", "benchmark_process_images.benchmark.txt")
+    shell:
+        """
+        module load snap
+        source snap_add_userdir {params.data_path}
+        python3 {input[0]} "{params.source_path}" "{params.data_path}" "{params.bulk_download}"  "{input[1]}"
+        touch {output}
+        """
+
+rule create_timeseries:
+    input:
+        "timeseries.py",
+        os.path.join(config["data_path"], "snake_log", "images_processed.txt")
+    output:
+        os.path.join(config["data_path"], "snake_log", "timeseries.txt")
+    params:
+        source_path=config["source_path"],
+        data_path=config["data_path"],
+        bulk_download=config["bulk_download"],
+        id=lambda wildcards: '{id}'
+    benchmark:
+        os.path.join(config["data_path"], "snake_log", "benchmark_create_timeseries.benchmark.txt")
+    shell:
+        """
+        echo "Data path: {params[data_path]}"
+        module load geoconda
+        for folder_path in "{params[data_path]}"/*/; do
+            # Extract folder name
+            id=$(basename "$folder_path")
+            if [ "$id" == "SLURM" ] || [ "$id" == "Error" ] || [ "$id" == "tiffs" ] || [ "$id" == "snap_cache" ] || [ "$id" == "*" ] || [ "$id" == "snake_log" ]; then
+                continue
+            fi
+
+            # Create timeseries of each target
+            echo $id
+            python timeseries.py "{params[source_path]}" "{params[data_path]}" "{params[bulk_download]}" "$id"
+        done  
+        touch {output}
+        """
+
+rule aggregate_benchmarks:
+    input:
+        expand(os.path.join(config["data_path"], "snake_log", "benchmark_{rule}.benchmark.txt"), 
+               rule=["initialize", "download_images", "download_dem", "download_orbits", "process_images", "create_timeseries"])
+    output:
+        os.path.join(config["data_path"], "snake_log", "benchmark_summary.txt")
+    run:
+        aggregate_benchmarks(os.path.join(config["data_path"], "snake_log"), output[0])
