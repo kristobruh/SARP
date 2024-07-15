@@ -20,6 +20,9 @@ This program is configured for CSC's Puhti environment. As such, it uses modules
 - asf_search
 - download_eofs
 
+NOTE: You also need to create an EarthData account and verify it in order to download images from ASF. It might take some time for the verification to take effect. You can do it at:
+https://asf.alaska.edu/how-to/data-basics/get-started-with-an-earthdata-login-account/
+
 
 ## Workflow
 
