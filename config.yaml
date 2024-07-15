@@ -1,4 +1,0 @@
-source_path: "/scratch/project_2001106/lake_timeseries/kalvasvaara_shapefile/Kalvasvaara_Paituli_20230302-Copy1.shp"
-data_path: "/scratch/project_2001106/lake_timeseries/test_snakemake/"
-separate: false
-bulk_download: true
