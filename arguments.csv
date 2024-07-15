@@ -1,23 +1,26 @@
 ### DOWNLOAD PARAMETERS ###
-# Add the full path to your ASF credentials file. The file should be a .txt with one row, with structure : username<tab>password .
+# Add the full path to your ASF credentials file. The file should be a .txt with one row, with structure : username<tab>password . 
+# Account can be created at: https://asf.alaska.edu/how-to/data-basics/get-started-with-an-earthdata-login-account/
 pathToClient	/users/kristofe/access/asf_client.txt
-start	2021-01-01
-end	2021-01-07
 
-# Preferred season, eg: 15,200. If not desired, set to none.
+# Strt and end dates for which images are downloaded, in format YYYY-MM-DD.
+start	2021-06-01
+end	2021-06-10
+
+# Whether observations are downloaded only for certain period for each year, eg: 15,200. If not desired (all available data from start to end), set to none.
 season	none
 
-# This is often best set at IW.
+# Determines the beam mode of the instrument. For S1 possible options are: EW, IW, S1, S2, S3, S4, S5, S6, WV. This is often best set at IW.
 beamMode	IW
 
-# Depending on what you want, both ASCENDING and DESCENDING work.
+# Whether observations are captured from ascending or descending track. Depending on what you want, both ASCENDING and DESCENDING work.
 flightDirection	ASCENDING
 
-# This is valid in Finland.
+# Polarization of the images. VV,VV+VH is valid in Finland. Other options are: VV, VV+VH, Dual VV, VV+VH, Dual HV, Dual HH, HH, HH+HV, VV, Dual VH
 polarization	VV,VV+VH
 
-# GRD_HD for Ground Range detected, SLC for complex and polSAR images.
-processingLevel	GRD_HD
+# Whether images are downloaded as real or imaginary. GRD_HD for Ground Range detected, SLC for complex and polSAR images.
+processingLevel	SLC
 
 # Amount of simultaneous downloads. 8 is good.
 processes	8
@@ -26,30 +29,30 @@ processes	8
 
 ### PROCESSING PARAMETERS ###
 
-# You can use one of three preset processing pipelines: GRD, SLC, polSAR.
-# Alternatively, you can set it at False, and define the processing parameters yourself.
-# If you're not sure what yor identifier column is, just run the process with some name, and the columns will be printed.
+# You can use one of three preset processing pipelines: GRD, SLC, polSAR. Note that for GRD, processingLevel should be set at GRD_HD, and for SLC and polSAR at SLC.
+# Alternatively, you can set 'process' as False, and define the processing parameters yourself below.
 
-process	GRD
+process	polSAR
+
+# Name of the column which identifies each polygon. If you're not sure what your identifier column is, just run the process with some name, and the columns will be printed.
 identifierColumn	PLOHKO
 
 #########
 
-# NOTE: slcSplit and slcDeburst only apply for SLC images.
 # Example processing pipelines:
 # GRD: applyOrbitFile, thermalNoiseRemoval, calibration, speckleFiltering, terrainCorrection, linearToDb.
 # SLC: slcSplit, applyOrbitFile, calibration, slcDeburst, speckleFiltering, terrainCorrection.
 
-slcSplit	True
-applyOrbitFile	True
+slcSplit	False
+applyOrbitFile	False
 thermalNoiseRemoval	False
-calibration	True
-complexOutput	True
+calibration	False
+complexOutput	False
 slcDeburst	False
 speckleFiltering	False
 polarimetricSpeckleFiltering	False
 filterResolution	5
-polarimetricParameters	True
+polarimetricParameters	False
 terrainCorrection	False
 terrainResolution	10.0
 bandMaths	False
@@ -62,9 +65,12 @@ linearToDb	False
 ### POST-PROCESSING PARAMETERS ###
 timeseries	True
 
+# Whether several images are averaged in timeseries analysis. Usually should be set at False, unless you know you want to average images.
 movingAverage	False
 movingAverageWindow	2
 
 # If reflector is enabled, the code finds a brightest spot in the image and calculates timeseries on that one spot.
 reflector	False
+
+# Weather analysis is currently disabled.
 downloadWeather	False
