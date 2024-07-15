@@ -1,0 +1,5 @@
+source_path: "/scratch/project_2001106/lake_timeseries/sarp/example_target.gpkg"
+data_path: "/scratch/project_2001106/lake_timeseries/test/"
+separate: true
+bulk_download: true
+restart-times: 3
