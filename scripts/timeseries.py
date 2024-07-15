@@ -219,7 +219,7 @@ def mask_and_save_rasters(data_path, path_to_shapefile, output_folder):
 
                 # Check filtering criteria
                 if mean == 0  or zero_percentage > 0.2:
-                    print(f'Skipping this. mean = {mean}, Zeros = {zero_percentage}')
+                    print(f'Skipping {file}. mean = {mean}, Zeros = {zero_percentage}')
                     continue  # Skip to the next raster file if any criterion is met
             except RuntimeWarning:
                 print('Empty raster.')
@@ -1581,11 +1581,16 @@ def save_to_SQL(path, masked_path, processingLevel):
         # Add band means to the row dictionary
         row_dict.update(values_dict)
         df = pd.DataFrame([row_dict])
-        df.to_csv(f'{path}/{identifier}/{identifier}.csv', index=False)
-
         master_df = pd.concat([master_df, df], ignore_index=True)
 
-    # Save to SQL database
+        # Save to parcel-specific csv
+        csv_path = f'{path}/{identifier}/{identifier}.csv'
+        if not os.path.isfile(csv_path):
+            df.to_csv(csv_path, index=False)
+        else:
+            df.to_csv(csv_path, mode='a', header=False, index=False)
+
+    # Save to SQL and CSV database
     db_path = os.path.join(path, 'SQL_database.db')
 
     if not os.path.exists(db_path):
