@@ -22,6 +22,7 @@ This program is configured for CSC's Puhti environment. As such, it uses modules
 
 NOTE: You also need to create an EarthData account and verify it in order to download images from ASF. It might take some time for the verification to take effect. You can do it at:
 https://asf.alaska.edu/how-to/data-basics/get-started-with-an-earthdata-login-account/
+After making your account, save the login info (username, password, separated by a tab) to a .txt file and save it somewhere where it can be accessed (I recommend user folder for privacy).
 
 
 ## Workflow
