@@ -1633,7 +1633,6 @@ def main():
         path_to_shapefile = os.path.join(path, identifier, 'shapefile', f'{identifier}.shp')
 
         df = parse_file_info(data_path)
-        print('File parsing completed.')
 
         if movingAverage:
             averaged_path = os.path.join(path,identifier,'averaged_tiffs')
@@ -1679,7 +1678,7 @@ def main():
             else:
                 temperature, snows, precipitation_amount,precipitation_intensity, meteo_dates = find_meteorological_data(data_path, path, identifier, path_to_shapefile)
             make_plot(path,identifier,temperature,precipitation_amount,snows,VV,VH,dates,meteo_dates, reflector)
-        print('Plots created, analysis done. \n')
+        print('Timeseries done. \n')
 
     else:
         print('Timeseries not done.')

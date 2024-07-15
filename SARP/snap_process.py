@@ -842,7 +842,6 @@ def main():
     
     print('Processing done. \n')
     gc.collect()
-
     print(image1, image2)
     # -------- END OF PROCESSING ----------
 if __name__== "__main__":
