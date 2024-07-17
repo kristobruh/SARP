@@ -122,7 +122,7 @@ rule process_images:
         os.path.join(config["data_path"], "snake_log", "orbits_downloaded.txt")
     output:
         os.path.join(config["data_path"], "snake_log", "images_processed.txt")
-    retries: 5
+    retries: 3
     params:
         source_path=config["source_path"],
         data_path=config["data_path"],
