@@ -63,4 +63,10 @@ except:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "fmiopendata"])
     from fmiopendata.wfs import download_stored_query
 
+try:
+    import dask
+except:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "dask"])
+    import dask
+
 print('All good! \n')
