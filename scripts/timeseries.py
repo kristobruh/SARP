@@ -22,11 +22,11 @@ except:
     from fmiopendata.wfs import download_stored_query
     
     
-try:
-    from pyinterpolate.idw import inverse_distance_weighting
-except:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "pyinterpolate"])
-    from pyinterpolate.idw import inverse_distance_weighting
+#try:
+#    from pyinterpolate.idw import inverse_distance_weighting
+#except:
+#    subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "pyinterpolate"])
+#    from pyinterpolate.idw import inverse_distance_weighting
 
 
 def read_arguments_from_file(file_path):
