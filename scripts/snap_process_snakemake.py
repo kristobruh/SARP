@@ -11,15 +11,44 @@ import fcntl, io
 # Function to acquire lock
 # Define the lock file path in the current working directory
 lock_filepath = os.path.join(os.getcwd(), "lock.lock")
+processinglimit_filepath = os.path.join(os.getcwd(), "processinglimit.txt")
+
+# Create the processing limit file if it doesn't exist
+while not os.path.exists(processinglimit_filepath):
+    try:
+        with open(processinglimit_filepath, 'w+') as f:
+            fcntl.flock(f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            f.write('0')
+            fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+        print('Processing limit file created.')
+    except IOError:
+        print('Could not create processing limit file. Retrying...')
+        time.sleep(1)
 
 # Acquire lock
 lock = open(lock_filepath, 'w')
 lock_acquired = False
 while not lock_acquired:
     try:
-        fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-        lock_acquired = True
-        print('Lock acquired.')
+        # Read the current processing limit with a lock
+        with open(processinglimit_filepath, 'r+') as f:
+            fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+            processinglimit = int(f.read().strip())
+            if processinglimit < 4:
+                # Increment the processing limit
+                # Try to acquire the lock
+                fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                lock_acquired = True
+                print('Lock acquired.')
+                print(f'Current processes: {processinglimit + 1}')
+                f.seek(0)
+                f.write(str(processinglimit + 1))
+                f.truncate()
+                fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+            else:
+                fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+                lock_acquired = False
+                time.sleep(1)
     except IOError:
         time.sleep(1)
 
@@ -880,6 +909,14 @@ def main():
     
     print('Processing done. \n')
     gc.collect()
+
+    with open(processinglimit_filepath, 'r+') as f:
+        fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+        processinglimit = int(f.read().strip())
+        f.seek(0)
+        f.write(str(processinglimit - 1))
+        f.truncate()
+        fcntl.flock(f.fileno(), fcntl.LOCK_UN)
 
     # -------- END OF PROCESSING ----------
     shutil.rmtree(image1)
