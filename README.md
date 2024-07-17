@@ -1,7 +1,7 @@
 # Sentinel-1 Automated Retrieval and Processing (SARP)
 
 ## Description
-This package is an automated Sentinel-1 SAR image download, process, and analysis pipeline for SAR images in Finland. The package is run from the command line interface of Puhti, either in interactive or batch mode. Running locally works as well, but then you need to ensure that you have all the packages installed, and modify the bash script by removing module calls.
+This package is an automated Sentinel-1 SAR image download, process, and analysis pipeline for SAR images in Finland. The script is run from the command line interface of Puhti, either in interactive or batch mode. (Running locally might work as well, but then you need to ensure that you have all the packages installed, and modify the bash script by removing module calls. Thus, I recommed using Puhti's CLI.) 
 
 This program can download and process both Ground Range Detected (GRD) and Single-look Complex (SLC) images. Additionally, polSAR image processing is possible.
 
@@ -20,7 +20,7 @@ This program is configured for CSC's Puhti environment. As such, it uses modules
 - asf_search
 - download_eofs
 
-NOTE: You also need to create an EarthData account and verify it in order to download images from ASF. It might take some time for the verification to take effect. You can do it at:
+**NOTE:** You also need to create an EarthData account and verify it in order to download images from **ASF** (Alaska Satellite Facility). It might take some time for the verification to take effect. You can do it at:
 https://asf.alaska.edu/how-to/data-basics/get-started-with-an-earthdata-login-account/
 After making your account, save the login info (username, password, separated by a tab) to a .txt file and save it somewhere where it can be accessed (I recommend user folder for privacy).
 
