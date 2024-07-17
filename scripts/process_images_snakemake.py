@@ -117,7 +117,7 @@ def enqueue_files(dataPath, pathToDem, pathToShapefile):
                 print(f'Sending to process: {filename1} and {filename2}')
                 # Enqueue the processing function with filenames
                 file_queue.put((process_sar_data, (os.path.join(dataPath, filename1), os.path.join(dataPath, filename2), dataPath, pathToDem, pathToShapefile, os.path.join(dataPath, "snap_cache"))))
-                time.sleep(1)
+                time.sleep(1.35)
                 # Mark filenames as used
                 used_files.append(filename1)
                 used_files.append(filename2)
@@ -129,7 +129,7 @@ def enqueue_files(dataPath, pathToDem, pathToShapefile):
         if not combined:
             print(f'Sending to process: {filename1}')
             file_queue.put((process_sar_data, (os.path.join(dataPath, filename1), 'none', dataPath, pathToDem, pathToShapefile, os.path.join(dataPath, "snap_cache"))))
-            time.sleep(1)
+            time.sleep(1.35)
             used_files.append(filename1)
 
 
@@ -176,6 +176,12 @@ def main():
     file_queue.join()
 
     print("All tasks completed.")
+
+    # Remove used locks and processing limits
+    lock_filepath = os.path.join(os.getcwd(), "lock.lock")
+    processinglimit_filepath = os.path.join(os.getcwd(), "processinglimit.txt")
+    os.remove(lock_filepath)
+    os.remove(processinglimit_filepath)
 
 if __name__ == "__main__":
     main()
