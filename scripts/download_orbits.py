@@ -105,11 +105,13 @@ def download_orbit_files():
 def main():
     
     args = read_arguments_from_file(os.path.join(os.path.dirname(os.getcwd()), 'arguments.csv'))
+    process = args.get('process')
     applyOrbitFile = args.get('applyOrbitFile') == 'True'
-    
-    if applyOrbitFile:
+    processes = ['grd','slc','polsar']
+    if process.lower() in processes:
         download_orbit_files()
-        
+    elif applyOrbitFile:
+        download_orbit_files()
     else:
         print('Not downloading orbit files. \n')
     
