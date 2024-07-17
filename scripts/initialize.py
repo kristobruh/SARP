@@ -300,12 +300,14 @@ def check_processing_parameters():
     # Check that processing matches the download processing parameter:
     process = args.get('process')
     if processingLevel == 'GRD_HD':
-        if process != 'GRD' and process != 'False':
+        grdprocesses = ['GRD','False']
+        if process not in grdprocesses:
             print(f'Processing preset ({process}) does not match the download processing parameter ({processingLevel}).')
             error = True
-            
+                        
     elif processingLevel == 'SLC':
-        if process != 'SLC' and process != 'polSAR' and process != 'False':
+        slcprocesses = ['SLC','polSAR','False']
+        if process not in slcprocesses:
             print(f'Processing preset ({process}) does not match the download processing parameter ({processingLevel}).')
             error = True
     
