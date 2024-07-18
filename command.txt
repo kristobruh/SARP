@@ -1,5 +1,14 @@
+# These are example commands that  could be used to run the program.
+
+# 1. Interactive, regular
 bash run_interactive.sh -s "/scratch/project_2001106/lake_timeseries/kalvasvaara_shapefile/Kalvasvaara_Paituli_20230302-Copy1.shp" -r "/scratch/project_2001106/lake_timeseries/test/" -b -p
 
-bash run_interactive.sh -s "/scratch/project_2001106/S1_reflectors/reflectors-missing.csv" -r "/scratch/project_2001106/lake_timeseries/test/"
+# 2. Batch job, regular
+sbatch run_batch.sh -s "/scratch/project_2001106/lake_timeseries/sarp/example_target.gpkg" -r "/scratch/project_2001106/lake_timeseries/test/" -b -p
 
-sbatch run_batch.sh -s "/scratch/project_2001106/S1_reflectors/reflectors-missing.csv" -r "/scratch/project_2001106/S1_reflectors/test3/" -p
+# 3. Interactive snakemake
+module load snakemake
+snakemake --cores 4
+
+# 4. Batch snakemake
+sbatch run_batch_snakemake.sh
