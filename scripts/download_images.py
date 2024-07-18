@@ -54,9 +54,7 @@ def read_arguments_from_file(file_path):
     return arguments
 
 
-
-
-def authenticate(pathToClient):
+def authenticate():
     '''
     Authenticates your asf account.
     
@@ -66,16 +64,22 @@ def authenticate(pathToClient):
     Output: 
     - session - authenticated session file.
     '''
-    # Authenticate your account
-    with open(pathToClient, 'r') as file:
-        line = file.readline().strip()
-        username, password = line.split('\t')
+    netrc_path = os.path.expanduser('~/.netrc')
+    with open(netrc_path, 'r') as file:
+        lines = file.readlines()
+    
+    if len(lines) < 3:
+        raise ValueError("The .netrc file does not have enough lines to extract login and password")
+    
+    # Get the last argument of the second and third rows
+    username = lines[1].strip().split()[-1]
+    password = lines[2].strip().split()[-1]
 
+    # Authenticate the account
     print('Authenticating...')
     session = asf.ASFSession().auth_with_creds(username, password)
     
     return session
-    
     
     
     
@@ -175,7 +179,6 @@ def main():
 
     # Read arguments from the text file
     args = read_arguments_from_file(os.path.join(os.path.dirname(os.getcwd()), 'arguments.csv'))
-    pathToClient = args.get('pathToClient')
     start = args.get('start')
     end = args.get('end')
     season = args.get('season')
@@ -190,7 +193,7 @@ def main():
     processes = int(args.get('processes'))
 
     # Authenticate the session
-    session = authenticate(pathToClient)
+    session = authenticate()
     
     # Create paths and wkt's
     if bulkDownload:
