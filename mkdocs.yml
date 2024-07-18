@@ -4,7 +4,6 @@ nav:
   - Setup: setup.md
   - Variables: variables.md
   - Examples:
-      - Overview: examples/examples.md
       - Interactive GRD: examples/example1.md
       - Batch SLC: examples/example2.md
       - Snakemake PolSAR: examples/example3.md
