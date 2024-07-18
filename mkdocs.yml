@@ -3,5 +3,10 @@ nav:
   - Home: index.md
   - Introduction: introduction.md
   - Setup: setup.md
-  - Examples: examples.md
+  - Examples:
+      - Overview: examples/examples.md
+      - Example 1: examples/example1.md
+      - Example 2: examples/example2.md
+      - Example 3: examples/example3.md
   - Troubleshooting: troubleshooting.md
+  - Running locally: running_locally.md
