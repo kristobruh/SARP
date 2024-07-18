@@ -23,7 +23,7 @@ This program is configured for CSC's Puhti environment. As such, it uses modules
 
 ## Workflow
 
-There are two options the program can be ran through: regular **command line run**, and **Snakemake**. Regular CLI run is somewhat more straightforward, but is prone to errors caused by e.g. internet connection breakage, and is slower especially on large datasets and target areas. Snakemake, on the other hand, offers complete parallellization and significantly higher processing speeds, which is useful in long timeseries. Additionally, snakemake creates 'checkpoints', which means that an error does not require restarting the entire process, and automatic retries attempt to complete the process. The setup is mostly the same, execpt for the last part, when the scirpt run is called.
+There are two options the program can be run through: regular **command line run**, and **Snakemake**. Regular CLI run is somewhat more straightforward, but is prone to errors caused by e.g. internet connection breakage, and is slower especially on large datasets and target areas. Snakemake, on the other hand, offers complete parallellization and significantly higher processing speeds, which is useful in long timeseries. Additionally, snakemake creates 'checkpoints', which means that an error does not require restarting the entire process, and automatic retries attempt to complete the process. The setup is mostly the same, execpt for the last part, when the scirpt run is called.
 
 ### 1. Clone repository
 Use `git clone https://gitlab.com/fgi_nls/kauko/chade/sarp.git` to clone the repository to a destination of your liking.
@@ -67,7 +67,7 @@ machine urs.earthdata.nasa.gov
 
 Note that there should be a space before 'login' and 'password'. Once this is done, write `chmod 600 ~/.netrc` to the command line to restrict access to just the user. Now your account authentification process is complete!
 
-### 4a. Run using CLI:
+### 5a. Run using CLI:
 To run, you need to navigate to sarp/scripts/. The basic command is: 
 
 ```<run type> <script name> -s <source file> -r <result folder> -b (bulk download) -p (parse input file) ```
@@ -95,7 +95,7 @@ If you run the script in batch process mode, remember to set up the batch proces
 For some example commands, see **command.txt**.
 
 
-### 4b. Run using Snakemake:
+### 5b. Run using Snakemake:
 Again, navigate to sarp/scripts/. Set up the input parameters (source, target directory, bulk processing, separating) in config.yaml found in the folder. After that, in your CLI either write:
 
 `module load snakemake`
