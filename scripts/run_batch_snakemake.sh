@@ -1,14 +1,14 @@
 #!/bin/bash -l
-#SBATCH --account=project_2001106
-#SBATCH --job-name=test_job
+#SBATCH --account=project_number
+#SBATCH --job-name=your_job_name
 #SBATCH --partition=small
 #SBATCH --mem=30G
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=6
-#SBATCH --time=0:30:00
+#SBATCH --time=4:00:00
 #SBATCH --gres=nvme:20
-#SBATCH --output=/scratch/project_2001106/lake_timeseries/test/SLURM/%A_%a.out
-#SBATCH --error=/scratch/project_2001106/lake_timeseries/test/Error/%A_%a_ERROR.out
+#SBATCH --output=/path/to/your/results/folder/SLURM/%A_%a.out
+#SBATCH --error=/path/to/your/results/folder/Error/%A_%a_ERROR.out
 #SBATCH --mail-type=FAIL,END
 
 # Start measuring time
