@@ -42,6 +42,35 @@ For more detailed explanation on download parameters, see: https://docs.asf.alas
 
 Initially you might need to run the script a couple times to get the packages working.
 
+### 4. Create and verify Eathdata account
+You need to have a verified Earthdata account with appropriate permssions in order to download images and orbit files. You can create the account here:
+https://asf.alaska.edu/how-to/data-basics/get-started-with-an-earthdata-login-account/
+
+Then verify the account through email.
+
+After doing so, you need to give permissions to ASF to download data. This can be done through here:
+https://urs.earthdata.nasa.gov/profile
+
+Sign in to you account, and navigate to **applications --> authorized apps**. Then click APPROVE MORE APPLICATIONS, and write "Alaska Satellite Facility Data Access", and give it permissions.
+
+Once created, go to the base folder of you puhti account through the command line, and create a file named .netrc:
+
+```
+cd
+nano .netrc
+```
+
+Then, create a file with the following structure:
+
+```
+machine urs.earthdata.nasa.gov
+ login <your username>
+ password <your password>
+
+```
+
+Note that there should be a space before 'login' and 'password'. Once this is done, your account authentification process is complete.
+
 ### 4a. Run using CLI:
 To run, you need to navigate to sarp/scripts/. The basic command is: 
 
