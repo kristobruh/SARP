@@ -1,5 +1,6 @@
 site_name: SARP Documentation
 nav:
+  - Home: index.md
   - Introduction: introduction.md
   - Setup: setup.md
   - Examples: examples.md
