@@ -20,10 +20,6 @@ This program is configured for CSC's Puhti environment. As such, it uses modules
 - asf_search
 - download_eofs
 
-**NOTE:** You also need to create an EarthData account and verify it in order to download images from **ASF** (Alaska Satellite Facility). It might take some time for the verification to take effect. You can do it at:
-https://asf.alaska.edu/how-to/data-basics/get-started-with-an-earthdata-login-account/
-After making your account, save the login info (username, password, separated by a tab) to a .txt file and save it somewhere where it can be accessed (I recommend user folder for privacy).
-
 
 ## Workflow
 
@@ -69,7 +65,7 @@ machine urs.earthdata.nasa.gov
 
 ```
 
-Note that there should be a space before 'login' and 'password'. Once this is done, your account authentification process is complete.
+Note that there should be a space before 'login' and 'password'. Once this is done, write `chmod 600 ~/.netrc` to the command line to restrict access to just the user. Now your account authentification process is complete!
 
 ### 4a. Run using CLI:
 To run, you need to navigate to sarp/scripts/. The basic command is: 
