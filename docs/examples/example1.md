@@ -1,4 +1,4 @@
-### Example 1: Interactive GND processing with timeseries
+### Example 1: Interactive GRD processing with timeseries
 
 This example is run with the follwing `argument.txt` parameters:
 

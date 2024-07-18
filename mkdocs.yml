@@ -2,10 +2,11 @@ site_name: SARP Documentation
 nav:
   - Home: index.md
   - Setup: setup.md
+  - Variables: variables.md
   - Examples:
       - Overview: examples/examples.md
-      - Example 1: examples/example1.md
-      - Example 2: examples/example2.md
-      - Example 3: examples/example3.md
+      - Interactive GRD: examples/example1.md
+      - Batch SLC: examples/example2.md
+      - Snakemake PolSAR: examples/example3.md
   - Troubleshooting: troubleshooting.md
   - Running locally: running_locally.md
