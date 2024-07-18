@@ -34,7 +34,7 @@ while not lock_acquired:
         with open(processinglimit_filepath, 'r+') as f:
             fcntl.flock(f.fileno(), fcntl.LOCK_EX)
             processinglimit = int(f.read().strip())
-            if processinglimit < 4:
+            if processinglimit < 3:
                 # Increment the processing limit
                 # Try to acquire the lock
                 fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -635,6 +635,16 @@ def stack(source1,source2):
     
     return output
 
+def multilooking(source):
+    print('\tMultilooking...')
+    parameters = HashMap()
+    parameters.put('outputIntensity','false')
+    looks=3
+    parameters.put('nAzLooks',looks)
+    parameters.put('nRgLooks',looks)
+    output = GPF.createProduct('Multilook', parameters, source)
+    
+    return output
 
 def main():
     
@@ -689,6 +699,7 @@ def main():
         slcDeburst = True
         polarimetricSpeckleFiltering = True
         polarimetricParameters = True
+        multilook = True
         
         
     else:
@@ -825,6 +836,9 @@ def main():
         
     if slcDeburst:
         product = TOPSAR_deburst(product)
+
+    if multilook:
+        product = multilooking(product)
 
 
     #3: SPECKLE FILTER
