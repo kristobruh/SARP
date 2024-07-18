@@ -141,30 +141,22 @@ def check_processing_parameters():
     args = read_arguments_from_file(os.path.join(os.path.dirname(os.getcwd()), 'arguments.csv'))
     
     # Check is client path exists
-    pathToClient = args.get('pathToClient')
-    if not os.path.isfile(pathToClient):
-        print('Client file path is not valid.')
+    try:
+        netrc_path = os.path.expanduser('~/.netrc')
+        with open(netrc_path, 'r') as file:
+            lines = file.readlines()
+    
+            if len(lines) < 3:
+                raise ValueError("The .netrc file does not have enough lines to extract login and password")
+                error = True
+            line1 = lines[0].strip()
+            print(line1)
+            if line1 != 'machine urs.earthdata.nasa.gov':
+                print('The first row should be exactly "machine urs.earthdata.nasa.gov". The second row should be <space>login<space><your_username>, and third row <space>password<space><your_password>')
+                error = True
+    except:
+        print('Error reading client file. place it in ~/.netrc by eg. "cd", "nano .netrc". For more info, read the docs. ')
         error = True
-    else:
-        try:
-            with open(pathToClient, 'r') as file:
-                lines = file.readlines()
-
-                if len(lines) != 1:
-                    print('There are more than one line in your client file. Ensure it is only one line, username and password separated by a tab.')
-                    error = True
-
-                try:
-                    entries = lines[0].strip().split('\t')
-                    if len(entries) != 2:
-                        print('There are more than two entries in the file.')
-                        error = True
-                except ValueError:
-                    print('Entries not separated by a tab.')
-                    error = True
-        except:
-            print('Error reading client file.')
-            error = True
         
         
         
