@@ -1,5 +1,7 @@
 # Sentinel-1 Automated Retrieval and Processing (SARP)
 
+For detailed documentation, visit the project's [website](https://sarp-fgi-nls-kauko-chade-1f9c91770ca2d44526df232c1629cc9bf3259c.gitlab.io/).
+
 ## Description
 This package is an automated Sentinel-1 SAR image download, process, and analysis pipeline for SAR images in Finland. The script is run from the command line interface of Puhti, either in interactive or batch mode. (Running locally might work as well, but then you need to ensure that you have all the packages installed, and modify the bash script by removing module calls. Thus, I recommed using Puhti's CLI.) 
 
