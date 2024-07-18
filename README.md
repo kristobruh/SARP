@@ -56,7 +56,7 @@ cd
 nano .netrc
 ```
 
-Then, create a file with the following structure:
+Then, write the following info in the file:
 
 ```
 machine urs.earthdata.nasa.gov
