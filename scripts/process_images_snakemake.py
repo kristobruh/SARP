@@ -22,10 +22,9 @@ NOTE: For now it has some hard-coded things specific to Finland, so refrain from
 
 '''
 
-import os,sys, subprocess, shutil, csv, dask, time, datetime
+import os,sys, subprocess, shutil, csv, time, datetime
 import threading
 from queue import Queue
-
 
 # Queue to hold processing tasks
 file_queue = Queue()
