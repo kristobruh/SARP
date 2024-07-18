@@ -1,12 +1,9 @@
 
 ### DOWNLOAD PARAMETERS ###
-# Add the full path to your ASF credentials file. The file should be a .txt with one row, with structure : username<tab>password . 
-# Account can be created at: https://asf.alaska.edu/how-to/data-basics/get-started-with-an-earthdata-login-account/
-pathToClient	/users/kristofe/access/asf_client.txt
 
 # Strt and end dates for which images are downloaded, in format YYYY-MM-DD.
-start	2022-06-01
-end	2022-06-20
+start	2021-03-01
+end	2021-03-10
 
 # Whether observations are downloaded only for certain period for each year, eg: 15,200. If not desired (all available data from start to end), set to none.
 season	none
@@ -21,7 +18,7 @@ flightDirection	ASCENDING
 polarization	VV,VV+VH
 
 # Whether images are downloaded as real or imaginary. GRD_HD for Ground Range detected, SLC for complex and polSAR images.
-processingLevel	GRD_HD
+processingLevel	SLC
 
 # Amount of simultaneous downloads. 8 is good.
 processes	8
@@ -30,10 +27,10 @@ processes	8
 
 ### PROCESSING PARAMETERS ###
 
-# You can use one of three preset processing pipelines: GRD, SLC, polSAR. Note that for GRD, processingLevel should be set at GRD_HD, and for SLC and polSAR at SLC.
+# You can use one of three preset processing pipelines: GRD, SLC, polSAR (case sensitive). Note that for GRD, processingLevel should be set at GRD_HD, and for SLC and polSAR at SLC.
 # Alternatively, you can set 'process' as False, and define the processing parameters yourself below.
 
-process	GRD
+process	polSAR
 
 # Name of the column which identifies each polygon. If you're not sure what your identifier column is, just run the process with some name, and the columns will be printed.
 identifierColumn	PLOHKO
