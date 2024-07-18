@@ -1,0 +1,11 @@
+image: python:3.8
+
+pages:
+  script:
+    - pip install mkdocs
+    - mkdocs build -d public
+  artifacts:
+    paths:
+      - public
+  only:
+    - main

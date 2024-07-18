@@ -1,0 +1,6 @@
+site_name: SARP Documentation
+nav:
+  - Introduction: introduction.md
+  - Setup: setup.md
+  - Examples: examples.md
+  - Troubleshooting: troubleshooting.md
