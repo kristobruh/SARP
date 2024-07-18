@@ -5,13 +5,11 @@ Running this processing takes a considerable amount of memory, and that is why i
 import os, gc, subprocess, sys, argparse, csv, time, shutil, tempfile
 import fcntl, io
 
-#import_lock_path = os.path.join(os.path.dirname(dataPath),'import_lock.txt')
-#import_lock = open(import_lock_path, 'w')
-
 # Function to acquire lock
 # Define the lock file path in the current working directory
 lock_filepath = os.path.join(os.getcwd(), "lock.lock")
 processinglimit_filepath = os.path.join(os.getcwd(), "processinglimit.txt")
+processingLimit = 3
 
 # Create the processing limit file if it doesn't exist
 while not os.path.exists(processinglimit_filepath):
@@ -33,16 +31,16 @@ while not lock_acquired:
         # Read the current processing limit with a lock
         with open(processinglimit_filepath, 'r+') as f:
             fcntl.flock(f.fileno(), fcntl.LOCK_EX)
-            processinglimit = int(f.read().strip())
-            if processinglimit < 3:
+            concurrentProcesses = int(f.read().strip())
+            if concurrentProcesses < processingLimit:
                 # Increment the processing limit
                 # Try to acquire the lock
                 fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
                 lock_acquired = True
                 print('Lock acquired.')
-                print(f'Current processes: {processinglimit + 1}')
+                print(f'Current processes: {concurrentProcesses + 1}')
                 f.seek(0)
-                f.write(str(processinglimit + 1))
+                f.write(str(concurrentProcesses + 1))
                 f.truncate()
                 fcntl.flock(f.fileno(), fcntl.LOCK_UN)
             else:
@@ -667,6 +665,7 @@ def main():
         slcDeburst = False
         polarimetricSpeckleFiltering = False
         polarimetricParameters = False
+        multilook = False
         
     elif process == 'SLC':
         applyOrbitFile = True
@@ -683,6 +682,7 @@ def main():
         slcDeburst = True
         polarimetricSpeckleFiltering = False
         polarimetricParameters = False
+        multilook = True
         
     elif process == 'polSAR':
         applyOrbitFile = True
@@ -719,6 +719,7 @@ def main():
         bandMaths = args.get('bandMaths') == 'True'
         bandMathExpression = args.get('bandMathsExpression')
         linearToDb = args.get('linearToDb') == 'True'
+        multilook = args.get('multilook') == 'True'
     
     
     # Read arguments from the parent script
@@ -926,9 +927,9 @@ def main():
 
     with open(processinglimit_filepath, 'r+') as f:
         fcntl.flock(f.fileno(), fcntl.LOCK_EX)
-        processinglimit = int(f.read().strip())
+        concurrentProcesses = int(f.read().strip())
         f.seek(0)
-        f.write(str(processinglimit - 1))
+        f.write(str(concurrentProcesses - 1))
         f.truncate()
         fcntl.flock(f.fileno(), fcntl.LOCK_UN)
 
