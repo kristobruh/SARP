@@ -69,4 +69,20 @@ except:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "dask"])
     import dask
 
+try:
+    import geopandas as gpd
+except:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "geopandas"])
+    import geopandas as gpd
+
+try:
+    from shapely.geometry import Polygon
+    from shapely.ops import transform
+    from shapely.wkt import loads
+except:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "shapely"])
+    from shapely.geometry import Polygon
+    from shapely.ops import transform
+    from shapely.wkt import loads
+
 print('All good! \n')
