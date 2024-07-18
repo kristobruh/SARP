@@ -1,7 +1,7 @@
 # Sentinel-1 Automated Retrieval and Processing (SARP)
 
 ## Description
-This package is an automated Sentinel-1 SAR image download, process, and analysis pipeline for SAR images in Finland. The package is run from the command line interface of Puhti, either in interactive or batch mode. Running locally works as well, but then you need to ensure that you have all the packages installed, and modify the bash script by removing module calls.
+This package is an automated Sentinel-1 SAR image download, process, and analysis pipeline for SAR images in Finland. The script is run from the command line interface of Puhti, either in interactive or batch mode. (Running locally might work as well, but then you need to ensure that you have all the packages installed, and modify the bash script by removing module calls. Thus, I recommed using Puhti's CLI.) 
 
 This program can download and process both Ground Range Detected (GRD) and Single-look Complex (SLC) images. Additionally, polSAR image processing is possible.
 
@@ -20,14 +20,10 @@ This program is configured for CSC's Puhti environment. As such, it uses modules
 - asf_search
 - download_eofs
 
-NOTE: You also need to create an EarthData account and verify it in order to download images from ASF. It might take some time for the verification to take effect. You can do it at:
-https://asf.alaska.edu/how-to/data-basics/get-started-with-an-earthdata-login-account/
-After making your account, save the login info (username, password, separated by a tab) to a .txt file and save it somewhere where it can be accessed (I recommend user folder for privacy).
-
 
 ## Workflow
 
-There are two options the program can be ran through: regular **command line run**, and **Snakemake**. Regular CLI run is somewhat more straightforward, but is prone to errors caused by e.g. internet connection breakage, and is slower especially on large datasets and target areas. Snakemake, on the other hand, offers complete parallellization and significantly higher processing speeds, which is useful in long timeseries. Additionally, snakemake creates 'checkpoints', which means that an error does not require restarting the entire process, and automatic retries attempt to complete the process. The setup is mostly the same, execpt for the last part, when the scirpt run is called.
+There are two options the program can be run through: regular **command line run**, and **Snakemake**. Regular CLI run is somewhat more straightforward, but is prone to errors caused by e.g. internet connection breakage, and is slower especially on large datasets and target areas. Snakemake, on the other hand, offers complete parallellization and significantly higher processing speeds, which is useful in long timeseries. Additionally, snakemake creates 'checkpoints', which means that an error does not require restarting the entire process, and automatic retries attempt to complete the process. The setup is mostly the same, execpt for the last part, when the scirpt run is called.
 
 ### 1. Clone repository
 Use `git clone https://gitlab.com/fgi_nls/kauko/chade/sarp.git` to clone the repository to a destination of your liking.
@@ -42,7 +38,36 @@ For more detailed explanation on download parameters, see: https://docs.asf.alas
 
 Initially you might need to run the script a couple times to get the packages working.
 
-### 4a. Run using CLI:
+### 4. Create and verify Eathdata account
+You need to have a verified Earthdata account with appropriate permssions in order to download images and orbit files. You can create the account here:
+https://asf.alaska.edu/how-to/data-basics/get-started-with-an-earthdata-login-account/
+
+Then verify the account through email.
+
+After doing so, you need to give permissions to ASF to download data. This can be done through here:
+https://urs.earthdata.nasa.gov/profile
+
+Sign in to you account, and navigate to **applications --> authorized apps**. Then click APPROVE MORE APPLICATIONS, and write "Alaska Satellite Facility Data Access", and give it permissions.
+
+Once created, go to the base folder of you puhti account through the command line, and create a file named .netrc:
+
+```
+cd
+nano .netrc
+```
+
+Then, write the following info in the file:
+
+```
+machine urs.earthdata.nasa.gov
+ login <your username>
+ password <your password>
+
+```
+
+Note that there should be a space before 'login' and 'password'. Once this is done, write `chmod 600 ~/.netrc` to the command line to restrict access to just the user. Now your account authentification process is complete!
+
+### 5a. Run using CLI:
 To run, you need to navigate to sarp/scripts/. The basic command is: 
 
 ```<run type> <script name> -s <source file> -r <result folder> -b (bulk download) -p (parse input file) ```
@@ -70,7 +95,7 @@ If you run the script in batch process mode, remember to set up the batch proces
 For some example commands, see **command.txt**.
 
 
-### 4b. Run using Snakemake:
+### 5b. Run using Snakemake:
 Again, navigate to sarp/scripts/. Set up the input parameters (source, target directory, bulk processing, separating) in config.yaml found in the folder. After that, in your CLI either write:
 
 `module load snakemake`
