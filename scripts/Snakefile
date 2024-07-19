@@ -115,7 +115,7 @@ rule download_orbits:
 
 rule process_images:
     input:
-        "process_images_snakemake.py",
+        "process_images.py",
         os.path.join(config["data_path"], "snake_log", "initialized.txt"),
         os.path.join(config["data_path"], "snake_log", "images_downloaded.txt"),
         os.path.join(config["data_path"], "snake_log", "dem_downloaded.txt"),
