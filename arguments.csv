@@ -45,8 +45,8 @@ slcSplit	False
 applyOrbitFile	False
 thermalNoiseRemoval	False
 calibration	False
-multilook	False
 complexOutput	False
+multilook	False
 slcDeburst	False
 speckleFiltering	False
 polarimetricSpeckleFiltering	False
