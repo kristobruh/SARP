@@ -23,6 +23,11 @@ NOTE: For now it has some hard-coded things specific to Finland, so refrain from
 '''
 
 import os,sys, subprocess, shutil, csv, time, datetime
+import threading
+from queue import Queue
+
+# Queue to hold processing tasks
+file_queue = Queue()
 
 def read_arguments_from_file(file_path):
     '''
@@ -43,8 +48,7 @@ def read_arguments_from_file(file_path):
                 arguments[arg_name.strip()] = arg_value.strip()
     return arguments
 
-
-def process_sar_data(image1,image2, dataPath, pathToDem, pathToShapefile):
+def process_sar_data(image1, image2, dataPath, pathToDem, pathToShapefile, cache_dir):
     """
     Caller function to the subscript which does the processing.
     
@@ -52,51 +56,40 @@ def process_sar_data(image1,image2, dataPath, pathToDem, pathToShapefile):
     - image1 (str): Full path to the first .SAFE folder to be processed. 
     - image2 (str): Full path to the second .SAFE folder to be processed. Can be 'none' when no slice assembly is needed.
     """
-    
-    # Construct the command to run SarPipeline.py with the specified arguments
+    # Construct the command to run snap_process.py with the specified arguments
     command = [
         'python3', 'snap_process.py',
-        image1, image2, dataPath, pathToDem, pathToShapefile
-    ]
+        image1, image2, dataPath, pathToDem, pathToShapefile]
     
     # Run the command using subprocess
-    subprocess.run(command)
+    try:
+        subprocess.run(command, check=True)
+    except subprocess.CalledProcessError as e:
+        print('Error!')
+        sys.exit(1)
 
 
-
-def main():
-    # Main function to call all sub-functions and subscripts.
+def enqueue_files(dataPath, pathToDem, pathToShapefile):
+    """
+    Function to enqueue SAR data files for processing.
     
-    # ------- START ARGUMENT CALL --------
-    source_path = sys.argv[1]
-    path = sys.argv[2]
-    bulkDownload = sys.argv[3].lower() == 'true'
-    if not bulkDownload:
-        identifier = sys.argv[4]
-        dataPath = os.path.join(path,identifier,'tiffs')
-        pathToShapefile = os.path.join(path,identifier,'shapefile',f'{identifier}.shp')
-        pathToDem = os.path.join(path,identifier,f'{identifier}_dem.tif')
-    else:
-        dataPath = os.path.join(path,'tiffs')
-        filename = os.path.basename(source_path)
-        filename = os.path.splitext(filename)[0]
-        pathToShapefile = os.path.join(path,f'{filename}.shp')
-        pathToDem = os.path.join(path,f'{filename}_dem.tif')
-        
-    # ------- END ARGUMENT CALL -------- 
-    
-    
-    # ------- START PROCESSING -------
-    
+    Input:
+    - dataPath (str): Path to the directory containing .SAFE folders.
+    - pathToDem (str): Path to the DEM file.
+    - pathToShapefile (str): Path to the shapefile.
+    """
+    used_files = []
     # Iterate through files in the folder
     for filename1 in os.listdir(dataPath):
         combined = False
-        # Ensure that we're only working with .SAFE data
-        if not filename1.endswith('.SAFE'):
-            continue
-        
         # Ensure that the file still exists after possible deletions
         if not os.path.exists(os.path.join(dataPath, filename1)):
+            continue
+
+        if filename1 in used_files:
+            continue
+
+        if not filename1.endswith('.SAFE'):
             continue
 
         # Get the absolute orbit identifier
@@ -110,34 +103,84 @@ def main():
             # Ensure that we're only working with .SAFE data
             if not filename2.endswith('.SAFE'):
                 continue
-                
+
             # Ensure that the file still exists after possible deletions
-            if not os.path.exists(os.path.join(dataPath, filename2)):
+            if filename2 in used_files:
                 continue
 
             # Get the second absolute orbit identifier
             orbit2 = filename2.split('_')[6]
 
-            # Check if the orbits match, then preform processing
+            # Check if the orbits match, then perform processing
             if orbit1 == orbit2:
                 print(f'Sending to process: {filename1} and {filename2}')
-                # Call the sub-script function and send the filenames to SarPipeline2.py
-                process_sar_data(os.path.join(dataPath, filename1), os.path.join(dataPath, filename2), dataPath, pathToDem, pathToShapefile)
-                # Remove processed .SAFEs to ensure that they're not double worked.
-                shutil.rmtree(os.path.join(dataPath, filename1))
-                shutil.rmtree(os.path.join(dataPath, filename2))
+                # Enqueue the processing function with filenames
+                file_queue.put((process_sar_data, (os.path.join(dataPath, filename1), os.path.join(dataPath, filename2), dataPath, pathToDem, pathToShapefile, os.path.join(dataPath, "snap_cache"))))
+                time.sleep(1.35)
+                # Mark filenames as used
+                used_files.append(filename1)
+                used_files.append(filename2)
                 combined = True
                 # Break the second loop, move to next file in the first loop
                 break
-       
-        # If no match is found after searching all files, perform processing on just the one image
+
+        # If no match is found after searching all files, enqueue processing for just the one image
         if not combined:
             print(f'Sending to process: {filename1}')
-            process_sar_data(os.path.join(dataPath, filename1), 'none', dataPath, pathToDem, pathToShapefile) # Here none is given as the second image
-            shutil.rmtree(os.path.join(dataPath, filename1))
+            file_queue.put((process_sar_data, (os.path.join(dataPath, filename1), 'none', dataPath, pathToDem, pathToShapefile, os.path.join(dataPath, "snap_cache"))))
+            time.sleep(1.35)
+            used_files.append(filename1)
 
-    # ------- END PROCESSING -------
 
+def worker():
+    """
+    Worker function to process tasks from the file_queue.
+    """
+    while True:
+        func, args = file_queue.get()
+        func(*args)
+        file_queue.task_done()
+
+def main():
+    # Main function to call all sub-functions and subscripts.
+    
+    # ------- START ARGUMENT CALL --------
+    source_path = sys.argv[1]
+    path = sys.argv[2]
+    bulkDownload = sys.argv[3].lower() == 'true'
+    if not bulkDownload:
+        identifier = sys.argv[4]
+        dataPath = os.path.join(path, identifier, 'tiffs')
+        pathToShapefile = os.path.join(path, identifier, 'shapefile', f'{identifier}.shp')
+        pathToDem = os.path.join(path, identifier, f'{identifier}_dem.tif')
+    else:
+        dataPath = os.path.join(path, 'tiffs')
+        filename = os.path.basename(source_path)
+        filename = os.path.splitext(filename)[0]
+        pathToShapefile = os.path.join(path, f'{filename}.shp')
+        pathToDem = os.path.join(path, f'{filename}_dem.tif')
+    # ------- END ARGUMENT CALL -------- 
+    
+    # Number of worker threads (max of 4 is recommended)
+    num_threads = 6
+
+    # Start worker threads
+    for _ in range(num_threads):
+        threading.Thread(target=worker, daemon=True).start()
+
+    # Enqueue files for processing
+    enqueue_files(dataPath, pathToDem, pathToShapefile)
+
+    # Wait for all tasks to be processed
+    file_queue.join()
+
+    print("All tasks completed.")
+
+    # Remove used locks and processing limits
+    lock_filepath = os.path.join(os.getcwd(), "lock.lock")
+    processinglimit_filepath = os.path.join(os.getcwd(), "processinglimit.txt")
+    os.remove(lock_filepath)
+    os.remove(processinglimit_filepath)
 
 if __name__ == "__main__":
     main()

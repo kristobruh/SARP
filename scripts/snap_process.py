@@ -2,11 +2,59 @@
 This script does all the actual processing, and is run by calling it from the parent script (process_images.py). Running it standalone won't work.
 Running this processing takes a considerable amount of memory, and that is why it is called separately each time in order to force clean the temp memory between processes.
 '''
+import os, gc, subprocess, sys, argparse, csv, time, shutil, tempfile
+import fcntl, io
 
-import os, gc, subprocess, sys, argparse, csv, time
+# Function to acquire lock
+# Define the lock file path in the current working directory
+lock_filepath = os.path.join(os.getcwd(), "lock.lock")
+processinglimit_filepath = os.path.join(os.getcwd(), "processinglimit.txt")
+processingLimit = 3
+
+# Create the processing limit file if it doesn't exist
+while not os.path.exists(processinglimit_filepath):
+    try:
+        with open(processinglimit_filepath, 'w+') as f:
+            fcntl.flock(f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            f.write('0')
+            fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+        print('Processing limit file created.')
+    except IOError:
+        print('Could not create processing limit file. Retrying...')
+        time.sleep(1)
+
+# Acquire lock
+lock = open(lock_filepath, 'w')
+lock_acquired = False
+while not lock_acquired:
+    try:
+        # Read the current processing limit with a lock
+        with open(processinglimit_filepath, 'r+') as f:
+            fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+            concurrentProcesses = int(f.read().strip())
+            if concurrentProcesses < processingLimit:
+                # Increment the processing limit
+                # Try to acquire the lock
+                fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                lock_acquired = True
+                print('Lock acquired.')
+                print(f'Current processes: {concurrentProcesses + 1}')
+                f.seek(0)
+                f.write(str(concurrentProcesses + 1))
+                f.truncate()
+                fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+            else:
+                fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+                lock_acquired = False
+                time.sleep(1)
+    except IOError:
+        time.sleep(1)
+
+# Import snappy and other modules
 from snappy import HashMap, GPF, ProductIO
 from snapista import Operator
 import jpy
+
 
 try:
     import geopandas as gpd
@@ -585,6 +633,16 @@ def stack(source1,source2):
     
     return output
 
+def multilooking(source):
+    print('\tMultilooking...')
+    parameters = HashMap()
+    parameters.put('outputIntensity','false')
+    looks=3
+    parameters.put('nAzLooks',looks)
+    parameters.put('nRgLooks',looks)
+    output = GPF.createProduct('Multilook', parameters, source)
+    
+    return output
 
 def main():
     
@@ -607,6 +665,7 @@ def main():
         slcDeburst = False
         polarimetricSpeckleFiltering = False
         polarimetricParameters = False
+        multilook = False
         
     elif process == 'SLC':
         applyOrbitFile = True
@@ -623,6 +682,7 @@ def main():
         slcDeburst = True
         polarimetricSpeckleFiltering = False
         polarimetricParameters = False
+        multilook = True
         
     elif process == 'polSAR':
         applyOrbitFile = True
@@ -639,6 +699,7 @@ def main():
         slcDeburst = True
         polarimetricSpeckleFiltering = True
         polarimetricParameters = True
+        multilook = True
         
         
     else:
@@ -658,6 +719,7 @@ def main():
         bandMaths = args.get('bandMaths') == 'True'
         bandMathExpression = args.get('bandMathsExpression')
         linearToDb = args.get('linearToDb') == 'True'
+        multilook = args.get('multilook') == 'True'
     
     
     # Read arguments from the parent script
@@ -702,9 +764,18 @@ def main():
         print("Polarization error!")
 
         
+    #lock_path = os.path.join(os.path.dirname(dataPath),'lock.txt')
+    #lock = open(lock_path, 'w')
+    #lock_acquired = False
+    #while not lock_acquired:
+    #    try:
+    #        fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    #        lock_acquired = True
+    #        print('Lock acquired.')
+    #    except IOError:
+    #        print('Locked. Waiting 2 seconds before retry.')
+    #        time.sleep(2)
 
-        
-    
     # If there are two images, remove noise first and then assemble them
     if image2 != 'none':
     
@@ -754,8 +825,11 @@ def main():
         #1: REMOVE THERMAL NOISE
         if thermalNoiseRemoval:
             product = do_thermal_noise_removal(product)
-        
-        
+
+    fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
+    lock.close()
+    print('Lock released.')    
+
     #2: CALIBRATE
     if calibration:
         product = do_calibration(product, polarization, pols, complexOutput)
@@ -763,6 +837,9 @@ def main():
         
     if slcDeburst:
         product = TOPSAR_deburst(product)
+
+    if multilook:
+        product = multilooking(product)
 
 
     #3: SPECKLE FILTER
@@ -820,6 +897,11 @@ def main():
     #        attribute_value = attribute.getData()
     #        print(f"Attribute Name: {attribute_name}, Value: {attribute_value}")
 
+    #fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
+    #lock.close()
+    #print('Lock released.')
+
+
     #9: WRITE
     with open(os.path.join(os.path.dirname(dataPath), 'band_names.csv'), mode='w', newline='') as file:
         writer = csv.writer(file)
@@ -842,7 +924,19 @@ def main():
     
     print('Processing done. \n')
     gc.collect()
-    print(image1, image2)
+
+    with open(processinglimit_filepath, 'r+') as f:
+        fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+        concurrentProcesses = int(f.read().strip())
+        f.seek(0)
+        f.write(str(concurrentProcesses - 1))
+        f.truncate()
+        fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+
     # -------- END OF PROCESSING ----------
+    shutil.rmtree(image1)
+    if os.path.exists(image2) and os.path.isdir(image2):
+        shutil.rmtree(image2)
+    
 if __name__== "__main__":
     main()
