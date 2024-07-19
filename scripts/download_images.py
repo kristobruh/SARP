@@ -25,11 +25,12 @@ def unzip(dataPath, file):
     extract_to = os.path.splitext(file)[0]
     
     # Unzip
-    with zipfile.ZipFile(file, 'r') as zip_ref:
-        zip_ref.extractall(dataPath)
-    
-    # Delete the zip file
-    os.remove(file)
+    if file.endswith('.zip'):
+        with zipfile.ZipFile(file, 'r') as zip_ref:
+            zip_ref.extractall(dataPath)
+        
+        # Delete the zip file
+        os.remove(file)
 
 
     
