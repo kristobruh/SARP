@@ -150,7 +150,6 @@ def check_processing_parameters():
                 raise ValueError("The .netrc file does not have enough lines to extract login and password")
                 error = True
             line1 = lines[0].strip()
-            print(line1)
             if line1 != 'machine urs.earthdata.nasa.gov':
                 print('The first row should be exactly "machine urs.earthdata.nasa.gov". The second row should be <space>login<space><your_username>, and third row <space>password<space><your_password>')
                 error = True
