@@ -23,7 +23,9 @@ The outputs of this program are:
 
 - [Introduction](introduction.md)
 - [Setup](setup.md)
-- [Examples](examples.md)
+- [Variables](variables.md)
+- [Examples](examples/example1.md)
 - [Troubleshooting](troubleshooting.md)
+- [Running locally](running_locally.md)
 
 ![Test Image](images/test_image.png)
