@@ -2,6 +2,9 @@
 
 As explained before, arguments.csv is the main file for configuring your desired download, processing, and post-processing parameters. Here is a more detailed explanation of each of them.
 
+For more detailed explanation on (some) download parameters, see: https://docs.asf.alaska.edu/api/keywords/ and https://docs.asf.alaska.edu/asf_search/ASFSearchOptions/.
+
+
 ### Download parameters
 
 **start**
