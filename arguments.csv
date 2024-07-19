@@ -1,9 +1,9 @@
 
 ### DOWNLOAD PARAMETERS ###
 
-# Strt and end dates for which images are downloaded, in format YYYY-MM-DD.
+# Start and end dates for which images are downloaded, in format YYYY-MM-DD.
 start	2021-03-01
-end	2021-03-10
+end	2021-03-15
 
 # Whether observations are downloaded only for certain period for each year, eg: 15,200. If not desired (all available data from start to end), set to none.
 season	none
@@ -18,7 +18,7 @@ flightDirection	ASCENDING
 polarization	VV,VV+VH
 
 # Whether images are downloaded as real or imaginary. GRD_HD for Ground Range detected, SLC for complex and polSAR images.
-processingLevel	SLC
+processingLevel	GRD_HD
 
 # Amount of simultaneous downloads. 8 is good.
 processes	8
@@ -30,7 +30,7 @@ processes	8
 # You can use one of three preset processing pipelines: GRD, SLC, polSAR (case sensitive). Note that for GRD, processingLevel should be set at GRD_HD, and for SLC and polSAR at SLC.
 # Alternatively, you can set 'process' as False, and define the processing parameters yourself below.
 
-process	polSAR
+process	GRD
 
 # Name of the column which identifies each polygon. If you're not sure what your identifier column is, just run the process with some name, and the columns will be printed.
 identifierColumn	PLOHKO
@@ -45,6 +45,7 @@ slcSplit	False
 applyOrbitFile	False
 thermalNoiseRemoval	False
 calibration	False
+multilook	False
 complexOutput	False
 slcDeburst	False
 speckleFiltering	False
@@ -56,8 +57,11 @@ terrainResolution	10.0
 bandMaths	False
 bandMathsExpression	Sigma0_VV_db + 0.002
 linearToDb	False
-
 #########
+
+# Whether the raw images will be deleted after processing. By default this should be True, as the raw images take up a considerable amount of space.
+deleteUnprocessedImages	True
+
 
 
 ### POST-PROCESSING PARAMETERS ###

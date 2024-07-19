@@ -649,6 +649,7 @@ def main():
     # --------START READ VARIABLES ---------
     # Read arguments from the text file
     args = read_arguments_from_file(os.path.join(os.path.dirname(os.getcwd()), 'arguments.csv'))
+    deleteUnprocessedImages = args.get('deleteUnprocessedImages')
     process = args.get('process')
     if process == 'GRD':
         applyOrbitFile = True
@@ -934,9 +935,13 @@ def main():
         fcntl.flock(f.fileno(), fcntl.LOCK_UN)
 
     # -------- END OF PROCESSING ----------
-    shutil.rmtree(image1)
-    if os.path.exists(image2) and os.path.isdir(image2):
-        shutil.rmtree(image2)
+
+    # -------- REMOVE RAW FILES -----------
+    if deleteUnprocessedImages:
+        shutil.rmtree(image1)
+        if os.path.exists(image2) and os.path.isdir(image2):
+            shutil.rmtree(image2)
+    # --------- REMOVE RAW FILES ---------
     
 if __name__== "__main__":
     main()
