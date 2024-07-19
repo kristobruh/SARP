@@ -5,7 +5,7 @@ As explained before, arguments.csv is the main file for configuring your desired
 For more detailed explanation on (some) download parameters, see: https://docs.asf.alaska.edu/api/keywords/ and https://docs.asf.alaska.edu/asf_search/ASFSearchOptions/.
 
 
-### Download parameters
+## Download parameters
 
 **start**
 The start date of the observations. The format is YYYY-MM-DD. Example: 2021-05-01
@@ -46,47 +46,97 @@ Amount of simultaneous downloads. 8 is good.
 
 
 
-### Processing parameters
-You can use one of three preset processing pipelines: GRD, SLC, polSAR (case sensitive). Note that for GRD, processingLevel should be set at GRD_HD, and for SLC and polSAR at SLC. Alternatively, you can set 'process' as False, and define the processing parameters yourself below.
-
-**process**
-
-
-**identifierColumn**
-Name of the column which identifies each polygon. If you're not sure what your identifier column is, just run the process with some name, and the columns will be printed. Example: PLOHKO
+## Processing parameters
 
 Example processing pipelines:
 GRD: applyOrbitFile, thermalNoiseRemoval, calibration, speckleFiltering, terrainCorrection, linearToDb.
 SLC: slcSplit, applyOrbitFile, calibration, slcDeburst, speckleFiltering, terrainCorrection.
 
-slcSplit	False
-applyOrbitFile	False
-thermalNoiseRemoval	False
-calibration	False
-multilook	False
-complexOutput	False
-slcDeburst	False
-speckleFiltering	False
-polarimetricSpeckleFiltering	False
-filterResolution	5
-polarimetricParameters	False
-terrainCorrection	False
-terrainResolution	10.0
-bandMaths	False
-bandMathsExpression	Sigma0_VV_db + 0.002
-linearToDb	False
+**process**
+A predefined set of processing parameters. The options are either GRD, SLC, or polSAR. Very useful if you're not certain what parameters to set, and just want ready images.
+
+
+**identifierColumn**
+Name of the column which identifies each polygon. If you're not sure what your identifier column is, just run the process with some name, and the columns will be printed. Example: PLOHKO
+
+**slcSplit**
+Splits an SLC image to subswaths which overlap with the area. A crucial step in desktop SNAP due to it's massive reduction in size, but I don't think it's necessary in API application.
+
+
+**applyOrbitFile**
+Applies the precise ephemeris data from a separately downloaded satellite orbit file. Not absolutely necessary in GRD processing, but increases accuracy nevertheless. A crucial step for SLC and PolSAR processing.
+
+**thermalNoiseRemoval**
+Removes thermal noise from images. Increases resolution of GRD images, a good step to have.
+
+**calibration**
+Calibration of images from intensity values to real values, either in Sigma0 or complex output.
+
+
+**complexOutput**
+Whether calibration output is Sigma0 (False) or complex (True). Generally, Sigma0 is good for GRD, while complex for SLC.
+
+**multilook**
+Produces square pixels from SLC images. Good option to have, if you aim to visually inspect SLC images.
+
+**slcDeburst**
+Debursts SLC images, removing much noise. Very useful for SLC.
+
+
+**speckleFiltering**
+Removes noise from GRD images.
+
+
+**polarimetricSpeckleFiltering**
+Removes noise from SLC images, used in polSAR.
+
+
+**filterResolution**
+How many pixels are used in speckle filtering. The higher the number the less speckle, but the cloudier the image becomes. Generally used value is 3 to 5. (Needs to be odd)
+
+
+**polarimetricParameters**
+Calculates entropy, anisotropy, etc.. for polSAR.
+
+
+**terrainCorrection**
+Ties the image to the terrain, giving it proper placement and shape.
+
+
+**terrainResolution**
+Resolution at which the tie is done. Using resolution below 10m is not necessary, as the resolution of SAR is 10m.
+
+
+**bandMaths**
+If you want to calculate something, set this as True.
+
+
+**bandMathsExpression**
+The actual expression. You have to know the band name, e.g. Sigma0_VV_db. Alternatively, you can do any of the calculations yourself afterwards.
+
+
+**linearToDb**
+Whether the linear values are converted to db. The standard in SAR is to represent the values in logartihmic db.
 
 
 
-### Post-processing parameters
-timeseries	True
+## Post-processing parameters
+**timeseries**
+If this is disabled, masking and database creation is not done. Thus, the images are only processed, and nothing more.
 
+
+**movingAverage**
 Whether several images are averaged in timeseries analysis. Usually should be set at False, unless you know you want to average images.
-movingAverage	False
-movingAverageWindow	2
 
+
+**movingAverageWindow**
+How many images you want to average. 
+
+
+**reflector**
 If reflector is enabled, the code finds a brightest spot in the image and calculates timeseries on that one spot.
-reflector	False
 
+
+
+**downloadWeather**
 Weather analysis is currently disabled.
-downloadWeather	False
