@@ -1,5 +1,7 @@
 # Welcome to SARP Documentation
 
+<br>
+
 Welcome to the SARP project documentation! This page includes the full description of SARP, how to install it properly, and how to run different configurations.
 
 SARP (Sentinel-1 Automated Retrieval and Processing) is an automated Sentinel-1 SAR image download, process, and analysis pipeline for SAR images in Finland. The script is run from the command line interface of Puhti, either in interactive or batch mode. It can download and process both Ground Range Detected (GRD) and Single-look Complex (SLC) images. Additionally, polSAR image processing is possible.
@@ -18,6 +20,8 @@ The outputs of this program are:
 - A 2m DEM and shapefile(s) of the target area(s)
 
 - Optional benchmark file
+
+<br><br>
 
 ## Table of Contents
 

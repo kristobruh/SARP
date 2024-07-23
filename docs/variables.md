@@ -43,7 +43,7 @@ Whether images are downloaded as real or imaginary. GRD_HD for Ground Range dete
 
 **processes**
 Amount of simultaneous downloads. 8 is good.
-
+<br><br>
 
 
 ## Processing parameters
@@ -117,7 +117,7 @@ The actual expression. You have to know the band name, e.g. Sigma0_VV_db. Altern
 
 **linearToDb**
 Whether the linear values are converted to db. The standard in SAR is to represent the values in logartihmic db.
-
+<br><br>
 
 
 ## Post-processing parameters

@@ -1,4 +1,7 @@
 ## Dependencies
+
+<br>
+
 This program is configured for CSC's Puhti environment. As such, it uses modules _geoconda_ and _snap_, along with a few external packages that are installed locally. The packages are:
 
 - fmiopendata
@@ -6,6 +9,7 @@ This program is configured for CSC's Puhti environment. As such, it uses modules
 - sentieneleof
 
 Account authentification is needed in order to use asf_search and sentineleof, and thus you should create one (it's free!).
+<br>
 
 ## 0. Create and verify Eathdata account
 You need to have a verified Earthdata account with appropriate permssions in order to download images and orbit files. You can create the account [here](https://asf.alaska.edu/how-to/data-basics/get-started-with-an-earthdata-login-account/).
@@ -33,9 +37,11 @@ machine urs.earthdata.nasa.gov
 ```
 
 Note that there should be a space before 'login' and 'password'. Once this is done, write `chmod 600 ~/.netrc` to the command line to restrict access to just the user. Now your account authentification process is complete!
+<br>
 
 ## 1. Clone repository
 Use `git clone https://gitlab.com/fgi_nls/kauko/chade/sarp.git` to clone the repository to a destination of your liking.
+<br>
 
 ## 2. Set up input shapefile
 You can use `example_target.gpkg` to try out the script, or use your own target. .shp and .gpgk files, as well as coordinate csv's, are accepted as input. For coordinate csv's, the input should be, all separated by tabs:
@@ -43,11 +49,11 @@ You can use `example_target.gpkg` to try out the script, or use your own target.
 | name | lat | lon | alt |
 |----------|----------|----------|----------|
 | EXAMPLE NAME | 60.22912067326671 | 19.951266738151517 | 53.21935461927205|
-
+<br>
 
 ## 3. Configure arguments
 In `arguments.txt`,set up your preferred arguments. It is good to start with a short timeframe, e.g. 10 days and `processingLevel GRD_HD` and `process GRD`, to configure the packages. See variables page for more descriptions on the parameters. Note: If you use a predefined process, there is no need to define the individual parameters separately. 
-
+<br>
 
 ## 4a. Run using CLI:
 To run, you need to navigate to sarp/scripts/. The basic command is: 
@@ -75,7 +81,7 @@ Example for running interactive:
 If you run the script in batch process mode, remember to set up the batch process paramters in `run_batch.sh`. It is recommended to first run it in interactive to ensure that all works.
 
 For some example commands, see **command.txt**.
-
+<br>
 
 ## 4b. Run using Snakemake:
 Again, navigate to sarp/scripts/. Set up the input parameters (source, target directory, bulk processing, separating) in config.yaml found in the folder. After that, in your CLI either write:
@@ -102,9 +108,11 @@ WARNING: The scripts f2py, f2py3 and f2py3.6 are installed in '/users/username/.
 ```
 
 This might not break the script, or if it does, just re-run and all should be ok.
+<br>
 
 ## A. In case of failures
 To ensure that the process flows smoothly, it is recommended to restart the entire program to a blank folder. Thus, if you managed to download something to /your/results/folder/, you should first `rm -r /your/results/folder` to clear the plate. If using snakemake, you don't have to restart but can rather retry with `snakemake --cores 4`, but make sure that scripts/processinglimit.txt is set to 0, or deleted entirely.
+<br>
 
 ## B. How to not delete raw images
 Unprocessed images are by default delted after processing due to the large size of the images. It is possible to download the images only once, however, if for example you're working with large timeseries and downloading images takes a considerable amount of time, and want to try different processing parameters. To achieve this, you should:
