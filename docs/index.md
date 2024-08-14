@@ -38,10 +38,14 @@ The software generally does the following: <br>
 The flow of the software is described in Figures 1 and 2, where the first figure shows the linear process, and the second figure shows the more parallellized Snakemake version. Both of these show a version where the images are downloaded in bulk, i.e. one image is presumed to cover the entire target area. If bulk_download = False (see [setup](setup.md)), the entire process is simply repeated indiviudally for each polygon.
 
 
-![SARP Process](images/SARP_process.png)
-**Figure 1: SARP Process**
+<p align="center">
+  <img src="images/SARP_process.svg" alt="SARP Process" />
+  <br>
+  <em>Figure 1: SARP Process</em>
+</p>
 
-![SARP Process Snakemake](images/SARP_process_Snakemake.png)
-**Figure 1: SARP Process with Snakemake**
-
-![Test Image](images/test_image.png)
+<p align="center">
+  <img src="images/SARP_process_Snakemake.png" alt="SARP Process Snakemake" />
+  <br>
+  <em>Figure 2: SARP Process Snakemake</em>
+</p>
