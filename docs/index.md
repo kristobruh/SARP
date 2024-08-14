@@ -23,13 +23,25 @@ The outputs of this program are:
 
 <br><br>
 
-## Table of Contents
+## Software description
+<br>
+SARP can be utilized in two ways, either traditionally using a linear process, or with Snakemake in a way that is optimized for high-performance computing. Snakemake is generally recommended especially for larger datasets, but debugging can be more difficult.
 
-- [Introduction](introduction.md)
-- [Setup](setup.md)
-- [Variables](variables.md)
-- [Examples](examples/example1.md)
-- [Troubleshooting](troubleshooting.md)
-- [Running locally](running_locally.md)
+The software generally does the following: <br>
+1. Create output file structure and process either coordinates, shapefiles, or geopackages to individual polygons or a single large shapefile
+2. Download images, either GRD or SLC
+3. Download orbit files if required
+4. Download and crop DEM of the target area
+5. Process images
+6. Create masked images and create databases of the data.
+
+The flow of the software is described in Figures 1 and 2, where the first figure shows the linear process, and the second figure shows the more parallellized Snakemake version. Both of these show a version where the images are downloaded in bulk, i.e. one image is presumed to cover the entire target area. If bulk_download = False (see [setup](setup.md)), the entire process is simply repeated indiviudally for each polygon.
+
+
+![SARP Process](images/SARP_process.png)
+**Figure 1: SARP Process**
+
+![SARP Process Snakemake](images/SARP_process_Snakemake.png)
+**Figure 1: SARP Process with Snakemake**
 
 ![Test Image](images/test_image.png)
