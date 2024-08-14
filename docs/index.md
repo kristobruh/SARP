@@ -39,13 +39,13 @@ The flow of the software is described in Figures 1 and 2, where the first figure
 
 
 <p align="center">
-  <img src="images/SARP_process.svg" alt="SARP Process" />
+  <img src="images/SARP_process.svg" alt="SARP Process" width="80%" />
   <br>
   <em>Figure 1: SARP Process</em>
 </p>
 
 <p align="center">
-  <img src="images/SARP_process_Snakemake.png" alt="SARP Process Snakemake" />
+  <img src="images/SARP_process_Snakemake.svg" alt="SARP Process Snakemake" width="80%" />
   <br>
-  <em>Figure 2: SARP Process Snakemake</em>
+  <em>Figure 2: SARP Process with Snakemake</em>
 </p>
