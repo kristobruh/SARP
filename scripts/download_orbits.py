@@ -43,7 +43,8 @@ def download_orbit_files():
     if not bulkDownload:
         identifier = sys.argv[3]
         dataPath = os.path.join(path,identifier,'tiffs')
-        orbit_folder = os.path.join(path, identifier, 'snap_cache/auxdata/Orbits/Sentinel-1/POEORB/S1A/')
+        #orbit_folder = os.path.join(path, identifier, 'snap_cache/auxdata/Orbits/Sentinel-1/POEORB/S1A/')
+        orbit_folder = os.path.join(path, 'snap_cache/auxdata/Orbits/Sentinel-1/POEORB/S1A/')
     else:
         dataPath = os.path.join(path,'tiffs')
         orbit_folder = os.path.join(path, 'snap_cache/auxdata/Orbits/Sentinel-1/POEORB/S1A/')
