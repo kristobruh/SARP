@@ -1623,68 +1623,70 @@ def main():
     
 
     if timeseries:
+        try:
+                
+            source_path = sys.argv[1]
+            path = sys.argv[2]
+            bulkDownload = sys.argv[3].lower() == 'true'
+            identifier = sys.argv[4]
 
-        source_path = sys.argv[1]
-        path = sys.argv[2]
-        bulkDownload = sys.argv[3].lower() == 'true'
-        identifier = sys.argv[4]
-
-        if not bulkDownload:
-            data_path = os.path.join(path,identifier,'tiffs')
-        else:
-            data_path = os.path.join(path,'tiffs')
-
-        masked_path = os.path.join(path,identifier,'masked_tiffs')
-        path_to_shapefile = os.path.join(path, identifier, 'shapefile', f'{identifier}.shp')
-
-        df = parse_file_info(data_path)
-
-        if movingAverage:
-            averaged_path = os.path.join(path,identifier,'averaged_tiffs')
-            calculate_average_raster(df, data_path, averaged_path, movingAverageWindow)
-            print('Averaging done.')
-
-        mask_and_save_rasters(data_path, path_to_shapefile, masked_path)
-        print('Masking done.')
-        gc.collect()
-        save_to_SQL(path, masked_path, processingLevel)
-
-
-
-
-        # TODO: FIX BELOW THIS TO MAKE IT MUCH MUCH SIMPLER!
-
-        # Save the bands as netCDF as well
-        #VV,VH, dates = extract_VV(masked_path)
-        #VV = resize_to_smallest(VV)
-        #VH = resize_to_smallest(VH)
-        #VV_xr = create_xarray(VV, dates, flip=True)
-        #VH_xr = create_xarray(VH, dates, flip=True)
-        #combined_xr = xr.combine_nested([VV_xr,VH_xr], concat_dim='band')
-        #combined_xr['band'] = ['VV', 'VH']
-        #combined_xr.to_netcdf(os.path.join(path,identifier,'VV_VH.nc'))
-
-        # Calculate statistics
-        #calculate_statistics(VV, VH, dates, path, identifier, df)
-        #print('Statistics completed.')
-
-
-        # Do reflector timeseries
-        if reflector:
-            upscale_factor = 10
-            VV_max, VH_max, VV_arr, max_indices, filtered_indices, position = find_reflector(data_path, upscale_factor)
-            make_location_fig(path,identifier,max_indices,filtered_indices,VV_arr,position)
-            VV,VH, dates = extract_VV_meteo(data_path, position, upscale_factor)
-
-        # Use either ready weather data, or download them again
-        if downloadWeather:
-            if bulkDownload:
-                temperature, snows, precipitation_amount, precipitation_intensity, meteo_dates = extract_intersected_data(os.path.join(path,'weather.nc'), path_to_shapefile)
+            if not bulkDownload:
+                data_path = os.path.join(path,identifier,'tiffs')
             else:
-                temperature, snows, precipitation_amount,precipitation_intensity, meteo_dates = find_meteorological_data(data_path, path, identifier, path_to_shapefile)
-            make_plot(path,identifier,temperature,precipitation_amount,snows,VV,VH,dates,meteo_dates, reflector)
-        print('Timeseries done. \n')
+                data_path = os.path.join(path,'tiffs')
 
+            masked_path = os.path.join(path,identifier,'masked_tiffs')
+            path_to_shapefile = os.path.join(path, identifier, 'shapefile', f'{identifier}.shp')
+
+            df = parse_file_info(data_path)
+
+            if movingAverage:
+                averaged_path = os.path.join(path,identifier,'averaged_tiffs')
+                calculate_average_raster(df, data_path, averaged_path, movingAverageWindow)
+                print('Averaging done.')
+
+            mask_and_save_rasters(data_path, path_to_shapefile, masked_path)
+            print('Masking done.')
+            gc.collect()
+            save_to_SQL(path, masked_path, processingLevel)
+
+
+
+
+            # TODO: FIX BELOW THIS TO MAKE IT MUCH MUCH SIMPLER!
+
+            # Save the bands as netCDF as well
+            #VV,VH, dates = extract_VV(masked_path)
+            #VV = resize_to_smallest(VV)
+            #VH = resize_to_smallest(VH)
+            #VV_xr = create_xarray(VV, dates, flip=True)
+            #VH_xr = create_xarray(VH, dates, flip=True)
+            #combined_xr = xr.combine_nested([VV_xr,VH_xr], concat_dim='band')
+            #combined_xr['band'] = ['VV', 'VH']
+            #combined_xr.to_netcdf(os.path.join(path,identifier,'VV_VH.nc'))
+
+            # Calculate statistics
+            #calculate_statistics(VV, VH, dates, path, identifier, df)
+            #print('Statistics completed.')
+
+
+            # Do reflector timeseries
+            if reflector:
+                upscale_factor = 10
+                VV_max, VH_max, VV_arr, max_indices, filtered_indices, position = find_reflector(data_path, upscale_factor)
+                make_location_fig(path,identifier,max_indices,filtered_indices,VV_arr,position)
+                VV,VH, dates = extract_VV_meteo(data_path, position, upscale_factor)
+
+            # Use either ready weather data, or download them again
+            if downloadWeather:
+                if bulkDownload:
+                    temperature, snows, precipitation_amount, precipitation_intensity, meteo_dates = extract_intersected_data(os.path.join(path,'weather.nc'), path_to_shapefile)
+                else:
+                    temperature, snows, precipitation_amount,precipitation_intensity, meteo_dates = find_meteorological_data(data_path, path, identifier, path_to_shapefile)
+                make_plot(path,identifier,temperature,precipitation_amount,snows,VV,VH,dates,meteo_dates, reflector)
+            print('Timeseries done. \n')
+        except IndexError:
+            print(f'Error, timeseries not done for {identifier}. A possible reason is that the shapefile is too small, or does not cover the area. Check on QGIS or other software to make sure that the shape is valid.')
     else:
         print('Timeseries not done.')
 
