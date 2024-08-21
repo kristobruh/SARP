@@ -109,15 +109,15 @@ else
             continue
         fi
         echo "ID: $id"
-        python download_from_asf.py "$source_path" "$data_path" "$bulk_download" "$id"
-        python create_dem.py "$source_path" "$data_path" "$bulk_download" "$id"
+        python download_images.py "$source_path" "$data_path" "$bulk_download" "$id"
+        python download_dem.py "$source_path" "$data_path" "$bulk_download" "$id"
         
         # Download orbit files
-        python S1_orbit_download.py "$data_path" "$bulk_download" "$id"  
+        python download_orbits.py "$data_path" "$bulk_download" "$id"  
     
         module load snap
         source snap_add_userdir $data_path
-        python3 iterate_sar.py "$source_path" "$data_path" "$bulk_download" "$id"
+        python3 process_images.py "$source_path" "$data_path" "$bulk_download" "$id"
         
         module load geoconda
         python timeseries.py "$source_path" "$data_path" "$bulk_download" "$id"
