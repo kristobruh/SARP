@@ -3,6 +3,7 @@ import geopandas as gpd
 import rasterio
 from rasterio.windows import from_bounds
 from rasterio.transform import from_origin
+import numpy as np
 
 def main():
     # Extract arguments from shellscript
@@ -70,15 +71,22 @@ def main():
     pixel_size_y = (bounds[3] - bounds[1]) / rst.shape[1]
     transform = from_origin(xmin, ymax, pixel_size_x, pixel_size_y)
 
-    # SAve DEM
-    print(f"Writing DEM...")
-    with rasterio.open(pathToDem, 'w', driver='GTiff', 
-                       width=rst.shape[2], height=rst.shape[1], 
-                       count=rst.shape[0], dtype=rst.dtype, 
-                       crs=crs, transform=transform,
-                       nodata=-9999) as dst:
-        dst.write(rst)
-    print(f"DEM saved. \n")
+    # Save DEM
+    # Check if the DEM slice is empty
+    dem_data = np.where(rst != -9999, rst, np.nan)
+    if np.isnan(dem_data).all():
+        print("DEM is empty. Skipping saving.")
+    else:
+        print(f"Writing DEM...")
+        with rasterio.open(pathToDem, 'w', driver='GTiff', 
+                        width=rst.shape[2], height=rst.shape[1], 
+                        count=rst.shape[0], dtype=rst.dtype, 
+                        crs=crs, transform=transform,
+                        nodata=-9999) as dst:
+            dst.write(rst)
+
+        # Print the mean DEM value
+        print("DEM saved.")
     
 if __name__ == "__main__":
     main()
