@@ -113,10 +113,10 @@ def enqueue_files(dataPath, pathToDem, pathToShapefile):
 
             # Check if the orbits match, then perform processing
             if orbit1 == orbit2:
-                print(f'Sending to process: {filename1} and {filename2}')
+                #print(f'Sending to process: {filename1} and {filename2}')
                 # Enqueue the processing function with filenames
                 file_queue.put((process_sar_data, (os.path.join(dataPath, filename1), os.path.join(dataPath, filename2), dataPath, pathToDem, pathToShapefile, os.path.join(dataPath, "snap_cache"))))
-                time.sleep(1.35)
+                time.sleep(10)
                 # Mark filenames as used
                 used_files.append(filename1)
                 used_files.append(filename2)
@@ -126,9 +126,9 @@ def enqueue_files(dataPath, pathToDem, pathToShapefile):
 
         # If no match is found after searching all files, enqueue processing for just the one image
         if not combined:
-            print(f'Sending to process: {filename1}')
+            #print(f'Sending to process: {filename1}')
             file_queue.put((process_sar_data, (os.path.join(dataPath, filename1), 'none', dataPath, pathToDem, pathToShapefile, os.path.join(dataPath, "snap_cache"))))
-            time.sleep(1.35)
+            time.sleep(10)
             used_files.append(filename1)
 
 
@@ -160,6 +160,11 @@ def main():
         pathToShapefile = os.path.join(path, f'{filename}.shp')
         pathToDem = os.path.join(path, f'{filename}_dem.tif')
     # ------- END ARGUMENT CALL -------- 
+    # Ensure pipeline is clean
+    processinglimit_filepath = os.path.join(os.getcwd(), "processinglimit.txt")
+    if os.path.exists(processinglimit_filepath):
+        os.remove(processinglimit_filepath)
+
     
     # Number of worker threads (max of 4 is recommended)
     num_threads = 6
@@ -178,7 +183,6 @@ def main():
 
     # Remove used locks and processing limits
     lock_filepath = os.path.join(os.getcwd(), "lock.lock")
-    processinglimit_filepath = os.path.join(os.getcwd(), "processinglimit.txt")
     os.remove(lock_filepath)
     os.remove(processinglimit_filepath)
 
