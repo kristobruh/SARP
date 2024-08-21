@@ -261,17 +261,39 @@ def do_terrain_correction(source, proj, pathToDem, terrainResolution):
     ''' 
     print('\tTerrain correction...')
     parameters = HashMap()
-    parameters.put('demName', 'External DEM')
-    parameters.put('externalDEMFile',pathToDem)
-    parameters.put('externalDEMNoDataValue', 0.0)
-    parameters.put('externalDEMApplyEGM','true')
+    if os.path.exists(pathToDem):  # If an external DEM is provided
+        parameters.put('demName', 'External DEM')
+        parameters.put('externalDEMFile', pathToDem)
+        parameters.put('externalDEMNoDataValue', 0.0)
+        parameters.put('externalDEMApplyEGM', 'true')
+        parameters.put('mapProjection', proj)
+    else:  # If no external DEM is provided, use the Copernicus 30m Global DEM
+        print('Using Copernicus 30m Global DEM.')
+        parameters.put('demName', 'Copernicus 30m Global DEM')
+        #proj = 'GEOGCS[&quot;WGS84(DD)&quot;, DATUM[&quot;WGS84&quot;, SPHEROID[&quot;WGS84&quot;, 6378137.0, 298.257223563]], PRIMEM[&quot;Greenwich&quot;, 0.0], UNIT[&quot;degree&quot;, 0.017453292519943295], AXIS[&quot;Geodetic longitude&quot;, EAST], AXIS[&quot;Geodetic latitude&quot;, NORTH]]'
+        proj = '''GEOGCS["WGS 84", 
+    DATUM["WGS_1984", 
+    SPHEROID["WGS 84", 6378137.0, 298.257223563, AUTHORITY["EPSG","7030"]], 
+    AUTHORITY["EPSG","6326"]], 
+    PRIMEM["Greenwich", 0.0, AUTHORITY["EPSG","8901"]], 
+    UNIT["degree", 0.017453292519943295], 
+    AXIS["Geodetic longitude", EAST], 
+    AXIS["Geodetic latitude", NORTH], 
+    AUTHORITY["EPSG","4326"]]'''
+
+        #proj = 'GEOGCS["WGS84(DD)", DATUM["WGS84", SPHEROID["WGS84", 6378137.0, 298.257223563]], PRIMEM["Greenwich", 0.0], UNIT["degree", 0.017453292519943295], AXIS["Geodetic longitude", EAST], AXIS["Geodetic latitude", NORTH]]'
+
+        parameters.put('mapProjection', proj)
+
     parameters.put('demResamplingMethod', 'BILINEAR_INTERPOLATION')
     parameters.put('imgResamplingMethod', 'BILINEAR_INTERPOLATION')
-    parameters.put('mapProjection', proj)
     parameters.put('saveProjectedLocalIncidenceAngle', True)
     parameters.put('saveSelectedSourceBand', True)
     parameters.put('pixelSpacingInMeter', terrainResolution)
+    
+    # Create the terrain corrected product
     output = GPF.createProduct('Terrain-Correction', parameters, source)
+    
     return output
 
 
@@ -299,9 +321,16 @@ def do_linear_to_db(source):
     Output:
     output (productIO) - Product with dB values.
     ''' 
+    source_bands = []
+    for band in source.getBands():
+        band_name = band.getName()
+        if band_name != 'projectedLocalIncidenceAngle':
+            source_bands.append(band_name)
+    source_bands = ",".join(source_bands)
+
     print('\tTo dB...')
     parameters = HashMap()
-    parameters.put('sourceBands', 'Sigma0_VH,Sigma0_VV')
+    parameters.put('sourceBands', source_bands)
     output = GPF.createProduct('LinearToFromdB', parameters, source)
     return output
 
@@ -749,6 +778,8 @@ def main():
     
     if productstamp == 'GRDH':
         polstamp = folder.split("_")[3]
+    elif productstamp == 'GRDM':
+        polstamp = folder.split("_")[3]
     elif productstamp == 'SLC':
         polstamp = folder.split("_")[4]
     polarization = polstamp[2:4]
@@ -852,10 +883,10 @@ def main():
         product = polarimetric_speckle_filtering(product,filterResolution)
 
     if polarimetricParameters:
-        product_HAAlpha = polarimetric_decomposition(product)
+        product = polarimetric_decomposition(product)
         #C2_matrix = polarimetric_matrices(product)
         product_stokes = polarimetric_parameters(product)
-        product = stack(product_HAAlpha, product_stokes)
+        product = stack(product, product_stokes)
 
 
     #4: TERRAIN CORRECTION
