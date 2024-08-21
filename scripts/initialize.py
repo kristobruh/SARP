@@ -1,6 +1,7 @@
 import sys, os, signal, csv, subprocess
 from datetime import datetime
 import geopandas as gpd
+import pandas as pd
 from shapely.geometry import Point
 
 def process_shapefiles(source_path, result_path, identifierColumn, separate=False, bulkDownload=False):
@@ -62,13 +63,15 @@ def process_coordinates(input_csv, result_path, bulkDownload=False):
     Output:
     Folder structure for the next steps.
     ''' 
-    # Read the CSV file
-    gdf = gpd.read_file(input_csv, delimiter='\t', header=0)
+    df = pd.read_csv(input_csv, delimiter='\t', header=0)
 
-    # Convert GeoDataFrame to have Point geometries
-    gdf['geometry'] = gdf.apply(lambda row: Point(row['lon'], row['lat']), axis=1)
-    gdf = gdf.set_crs('epsg:4326')
-    gdf = gdf.to_crs('epsg:3067')
+    # Convert the DataFrame to GeoDataFrame by creating Point geometries
+    df['geometry'] = df.apply(lambda row: Point(row['lon'], row['lat']), axis=1)
+    
+    # Convert to a GeoDataFrame and set the CRS
+    gdf = gpd.GeoDataFrame(df, geometry='geometry')
+    gdf = gdf.set_crs('epsg:4326')  # Set the initial CRS to WGS 84
+    gdf = gdf.to_crs('epsg:3067')  # Convert to the desired CRS (EPSG 3067)
 
 
     # Iterate through each row and save the buffered point in its own folder
