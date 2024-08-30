@@ -4,9 +4,15 @@
 
 This program is configured for CSC's Puhti environment. As such, it uses modules _geoconda_ and _snap_, along with a few external packages that are installed locally. The packages are:
 
-- fmiopendata
+- fmiopendata.wfs
 - asf_search
-- sentieneleof
+- eof.download
+- shapely
+- rasterio
+- pyproj
+- psutil
+- dask
+- geopandas.
 
 Account authentification is needed in order to use asf_search and sentineleof, and thus you should create one (it's free!).
 <br>

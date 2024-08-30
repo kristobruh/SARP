@@ -6,12 +6,13 @@ For detailed documentation, visit the project's [website](https://sarp-fgi-nls-k
 ## Authors and acknowledgment
 Kristofer Mäkinen
 
-kristofer.makinen@maanmittauslaitos.fi
-
-When publishing, additional credit should be given to the creators of asf_search and download_eofs.
+For inquiries about the software, you can contact:
+kristofer.makinen@gmail.com
 
 ## License
-CC 4.0
+Boost Software License.
+
+When publishing, pay attention to the license terms of the custom packages used in this software.
 
 ## Project status
-In active development.
+Not in active development.

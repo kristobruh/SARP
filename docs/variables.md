@@ -38,7 +38,7 @@ Polarization of the images. VV,VV+VH is valid in Finland. Other options are: VV,
 
 
 **processingLevel**
-Whether images are downloaded as real or imaginary. GRD_HD for Ground Range detected, SLC for complex and polSAR images.
+Whether images are downloaded as real or imaginary. GRD_HD (high dual) or GRD_MD (medium dual) for Ground Range detected, SLC for complex and polSAR images. If you use a single polarization, e.g. HH, you should use GRD_HS (high single) or GRD_MS (medium single) for lower-resolution images.
 
 
 **processes**
@@ -53,7 +53,7 @@ GRD: applyOrbitFile, thermalNoiseRemoval, calibration, speckleFiltering, terrain
 SLC: slcSplit, applyOrbitFile, calibration, slcDeburst, speckleFiltering, terrainCorrection.
 
 **process**
-A predefined set of processing parameters. The options are either GRD, SLC, or polSAR. Very useful if you're not certain what parameters to set, and just want ready images.
+A predefined set of processing parameters. The options are either GRD, SLC, or polSAR. Very useful if you're not certain what parameters to set, and just want ready images. If you want to set the variables yourself, set this as False.
 
 
 **identifierColumn**

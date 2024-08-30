@@ -35,7 +35,7 @@ The software generally does the following: <br>
 5. Process images
 6. Create masked images and create databases of the data.
 
-The flow of the software is described in Figures 1 and 2, where the first figure shows the linear process, and the second figure shows the more parallellized Snakemake version. Both of these show a version where the images are downloaded in bulk, i.e. one image is presumed to cover the entire target area. If bulk_download is not enabled, the entire process is simply repeated indiviudally for each polygon.
+The flow of the software is described in Figures 1 and 2, where the first figure shows the linear process, and the second figure shows the more parallellized Snakemake version. Both of these show a version where the images are downloaded in bulk, i.e. one image is presumed to cover the entire target area. If bulk_download is not enabled, the entire process is simply repeated indiviudally for each polygon. IN addition to this process, the script begins with download_packages.py, which ensures that all required packages are installed.
 
 
 <p align="center">
