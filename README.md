@@ -1,6 +1,6 @@
 # Sentinel-1 Automated Retrieval and Processing (SARP)
 
-For detailed documentation, visit the project's [website](https://sarp-fgi-nls-kauko-chade-1f9c91770ca2d44526df232c1629cc9bf3259c.gitlab.io/).
+For detailed documentation, visit the project's [website](https://sarp-fgi-nls-kauko-chade-1f9c91770ca2d44526df232c1629cc9bf3259c.gitlab.io/). EDIT: This might not work at the moment, you can view docs/ for the documentation.
 
 
 ## Authors and acknowledgment
